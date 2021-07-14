@@ -2,6 +2,7 @@ import os
 import logging
 from abc import abstractmethod
 from subprocess import Popen, PIPE, STDOUT
+from distutils.dir_util import mkpath
 from esam.UserFunctor import UserFunctor
 from esam import Constants as c
 
@@ -35,8 +36,37 @@ class Builder(UserFunctor):
         if (len(details) > 1):
             self.projectName = ''.join(details[1:])
         
+    #Sets the build path that should be used by children of *this.
+    #Also sets src, inc, lib, and dep paths, if they are present.
     def SetBuildPath(self, path):
         self.buildPath = path
+
+        #TODO: Consolidate this code with more attribute hacks?
+        rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
+        if (os.path.isdir(rootPath)):
+            self.rootPath = rootPath
+        else:
+            self.rootPath = None
+        srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
+        if (os.path.isdir(srcPath)):
+            self.srcPath = srcPath
+        else:
+            self.srcPath = None
+        incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
+        if (os.path.isdir(incPath)):
+            self.incPath = incPath
+        else:
+            self.incPath = None
+        depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
+        if (os.path.isdir(depPath)):
+            self.depPath = depPath
+        else:
+            self.depPath = None
+        libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
+        if (os.path.isdir(srcPath)):
+            self.libPath = libPath
+        else:
+            self.libPath = None
 
     def UserFunction(self, **kwargs):
         self.SetBuildPath(kwargs.get("dir"))
@@ -46,6 +76,12 @@ class Builder(UserFunctor):
         logging.info(f"Using {self.name} to build {self.projectName}, a {self.projectType}")
         self.Build()
         #TODO: Do we need to clear self.buildPath here?
+
+    #RETURNS: an opened file object for writing.
+    #Creates the path if it does not exist.
+    def CreateFile(self, file, mode="w+"):
+        mkpath(os.path.dirname(os.path.abspath(file)))
+        return open(file, mode)
 
     #Run whatever.
     #DANGEROUS!!!!!
