@@ -1,14 +1,18 @@
 # eons Basic Build System
 
-This project derives from [esam](https://github.com/eons-dev/esam) to improve ease-of-hacking ;)
+![build](https://github.com/eons-dev/bin_ebbs/actions/workflows/python-package.yml/badge.svg)
+
+This project derives from [eons](https://github.com/eons-dev/lib_eons) to improve ease-of-hacking ;)
 
 ## Supported Languages
 
-Currently, only C++ is supported
+Currently supporting:
+* C++
+* Python (yes, this repository is circularly dependent on itself)
 
 ## Prerequisites
 * python >= 3.6.3
-* esam >= 1.0.0
+* eons >= 0.1.0
 
 ### Prerequisites for C++
 * cmake >= 3.1.1
@@ -28,4 +32,22 @@ Specific usage is language specific
 
 ### C++
 
-Instead of writing and managing cmake files throughout your directory tree, you can use `ebbs --gen-cmake` from a `build` folder and all .h and .cpp files in 
+Instead of writing and managing cmake files throughout your directory tree, you can use `ebbs -l cpp` from a `build` folder and all .h and .cpp files in your source tree will be discovered and added to a CMakeLists.txt.
+
+Supported project types:
+* bin
+* lib
+* test (alias for bin)
+
+### Python
+
+Do you hate having empty `__init__.py` files and other nonsense strewn about your project? This fixes that. Somehow.  
+To build a python library or binary, go to the root of your project and run `ebbs -l py -d build`.  
+This will copy all `*.py` files out of `src` and compile them into a single `PROJECT_NAME.py` in a dependency-aware fashion.  
+It will also copy all files and directories from `inc` and add them to the build folder.  
+Then, it creates python project files, like `__main__.py` and `__init__.py`s.  
+Lastly, it invokes python's build package and pip to build and install your code. This will fail if the necessary dependencies are not installed.
+
+Supported project types:
+* bin
+* lib

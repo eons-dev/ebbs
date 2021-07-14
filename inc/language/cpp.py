@@ -1,6 +1,6 @@
 import os
 import logging
-from ebbs.Builder import Builder
+from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
 class cpp(Builder):

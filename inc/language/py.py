@@ -2,7 +2,7 @@ import os
 import logging
 from distutils.file_util import copy_file
 from distutils.dir_util import copy_tree, mkpath
-from ebbs.Builder import Builder
+from ebbs import Builder
 
 #Class name is what is used at cli, so we defy convention here in favor of ease-of-use.
 class py(Builder):
@@ -101,7 +101,8 @@ class py(Builder):
 
             else: #content line
                 #FIXME: See above FIXME. This should be self.outFile.write(line) but imports need to be written first.
-                self.consolidatedContents.append(line[:-1]+"\n")
+                #FIXME: Need to enforce each line ending with a newline without things becoming weird.
+                self.consolidatedContents.append(line)
         self.decomposedFiles.append(absPyFilePath)
         logging.debug(f"Finished decomposing {absPyFilePath}")
 
@@ -144,7 +145,7 @@ class py(Builder):
         initFile = self.CreateFile("__init__.py")
         #TODO: Support projects that aren't capitalized acronyms. For now, though, this is easy.
         initFile.write(f'''#!/usr/bin/env python3
-from .{self.projectName} import {self.projectName.upper()}
+from .{self.projectName} import *
 {self.projectName} = {self.projectName.upper()}()
 ''')
         initFile.close()

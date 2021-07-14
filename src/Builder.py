@@ -3,11 +3,10 @@ import logging
 from abc import abstractmethod
 from subprocess import Popen, PIPE, STDOUT
 from distutils.dir_util import mkpath
-from esam.UserFunctor import UserFunctor
-from esam import Constants as c
+import eons as e
 
-class Builder(UserFunctor):
-    def __init__(self, name=c.INVALID_NAME):
+class Builder(e.UserFunctor):
+    def __init__(self, name=e.INVALID_NAME()):
         super().__init__(name)
         
         self.requiredKWArgs.append("dir")
@@ -16,7 +15,7 @@ class Builder(UserFunctor):
 
         #TODO: project is looking an awful lot like a Datum.. Would making it one add functionality?
         self.projectType = "bin"
-        self.projectName = c.INVALID_NAME
+        self.projectName = e.INVALID_NAME()
 
     #Build things!
     #Override this or die.
