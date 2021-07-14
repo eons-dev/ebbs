@@ -14,7 +14,7 @@ Currently supporting:
 
 ## Prerequisites
 * python >= 3.6.3
-* eons >= 0.1.0
+* eons >= 1.1.0
 
 ## Installation
 `pip install ebbs`
