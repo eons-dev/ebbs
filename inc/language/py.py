@@ -103,6 +103,7 @@ class py(Builder):
                 #FIXME: See above FIXME. This should be self.outFile.write(line) but imports need to be written first.
                 #FIXME: Need to enforce each line ending with a newline without things becoming weird.
                 self.consolidatedContents.append(line)
+        self.consolidatedContents.append("\n")
         self.decomposedFiles.append(absPyFilePath)
         logging.debug(f"Finished decomposing {absPyFilePath}")
 
