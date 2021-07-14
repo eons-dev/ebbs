@@ -1,6 +1,4 @@
-# EBBS
-
-eons Basic Build System
+# eons Basic Build System
 
 This project derives from [esam](https://github.com/eons-dev/esam) to improve ease-of-hacking ;)
 

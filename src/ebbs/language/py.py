@@ -44,10 +44,12 @@ class py(Builder):
             self.MakeBin()
         self.CopyIncludes()
         # If we can build our prepared project, let's do it!
-        # if (os.path.isfile(os.path.join(self.rootPath, "setup.cfg"))):
-        #     os.chdir(self.rootPath)
-        #     self.BuildPackage()
-        #     self.InstallPackage()
+        if (os.path.isfile(os.path.join(self.rootPath, "setup.cfg"))):
+            logging.info(f"Begining python build process")
+            os.chdir(self.rootPath)
+            self.BuildPackage()
+            self.InstallPackage()
+        logging.info("Complete!")
 
     #Adds an import line to *this.
     #Prevents duplicates.
@@ -63,9 +65,9 @@ class py(Builder):
     def Decompose(self, pyFile):
         absPyFilePath = os.path.abspath(pyFile)
         if (absPyFilePath in self.decomposedFiles):
-            logging.info(f"Already decomposed {absPyFilePath}")
+            logging.debug(f"Already decomposed {absPyFilePath}")
             return
-        logging.info(f"Starting to decomposing {absPyFilePath}")
+        logging.debug(f"Starting to decomposing {absPyFilePath}")
         py = open(pyFile, "r")
         for line in py:
             if (line.startswith("from") or line.startswith("import")): #handle import parsing
@@ -73,14 +75,14 @@ class py(Builder):
                 if (spaced[1].startswith(".")): #Decompose dependency first.
                     dependency = spaced[1].replace("..", "../").replace(".", "./") + ".py"
                     #TODO: Isn't "...", etc. a thing with relative imports?
-                    logging.info(f"Found dependency {dependency}")
+                    logging.debug(f"Found dependency {dependency}")
                     self.Decompose(os.path.join(os.path.dirname(pyFile), dependency))
                     continue
                 multiports = line.split(",")
                 if (len(multiports) > 1): #break out multiple imports for duplicate checking
-                    # logging.info(f"Breaking up multiple imports from {line}")
+                    # logging.debug(f"Breaking up multiple imports from {line}")
                     begin = " ".join(multiports[0].split(" ")[:-1])
-                    # logging.info(f"Beginning = {begin}")
+                    # logging.debug(f"Beginning = {begin}")
                     #TODO: Do we need to support "\r\n" for windows?
                     #TODO: What's up with all this [:-1]+"\n" nonsense? Why does that invisible line ending change the uniqueness of the string (i.e. what is the line ending if not "\n")?
                     for i, imp in enumerate(multiports):
@@ -91,7 +93,7 @@ class py(Builder):
                             self.AddImport(begin + imp[:-1] + "\n")
                         else:
                             self.AddImport(begin + imp + "\n")
-                        # logging.info(f"Got new import: {begin + imp}")
+                        # logging.debug(f"Got new import: {begin + imp}")
                 else:
                     self.AddImport(line[:-1] + "\n")
 
@@ -101,7 +103,7 @@ class py(Builder):
                 #FIXME: See above FIXME. This should be self.outFile.write(line) but imports need to be written first.
                 self.consolidatedContents.append(line)
         self.decomposedFiles.append(absPyFilePath)
-        logging.info(f"Finished decomposing {absPyFilePath}")
+        logging.debug(f"Finished decomposing {absPyFilePath}")
 
     #Walk a directory and Decompose all python files in it.
     def DecomposePyFiles(self, directory):
