@@ -101,7 +101,7 @@ class py(Builder):
 
             else: #content line
                 #FIXME: See above FIXME. This should be self.outFile.write(line) but imports need to be written first.
-                self.consolidatedContents.append(line)
+                self.consolidatedContents.append(line[:-1]+"\n")
         self.decomposedFiles.append(absPyFilePath)
         logging.debug(f"Finished decomposing {absPyFilePath}")
 
