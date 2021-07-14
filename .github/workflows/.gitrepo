@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/eons-dev/part_python-workflows.git
 	branch = main
-	commit = 7f49c1ce644891e0aba4ca4a43868d3c222d52a1
-	parent = 3fdb933f94f45fd2db40d09b546d6b1f2547b44d
+	commit = 75c5a83141fa89006bf7526256c868b4d30d79fc
+	parent = dfd6d17c837ef0bb61e00ee25f8f090f4e9ac04f
 	method = merge
 	cmdver = 0.4.3
