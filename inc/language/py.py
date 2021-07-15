@@ -73,7 +73,10 @@ class py(Builder):
             if (line.startswith("from") or line.startswith("import")): #handle import parsing
                 spaced = line.split(' ')
                 if (spaced[1].startswith(".")): #Decompose dependency first.
-                    dependency = spaced[1].replace("..", "../").replace(".", "./") + ".py"
+                    dependency = spaced[1].replace("..", "../")
+                    if (dependency.startswith(".")):
+                        dependency = dependency[1:]
+                    dependency = dependency.replace(".", "/") + ".py"
                     #TODO: Isn't "...", etc. a thing with relative imports?
                     logging.debug(f"Found dependency {dependency}")
                     self.Decompose(os.path.join(os.path.dirname(pyFile), dependency))
