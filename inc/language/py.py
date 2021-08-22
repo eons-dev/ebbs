@@ -67,7 +67,7 @@ class py(Builder):
         if (absPyFilePath in self.decomposedFiles):
             logging.debug(f"Already decomposed {absPyFilePath}")
             return
-        logging.debug(f"Starting to decomposing {absPyFilePath}")
+        logging.debug(f"Starting to decompose {absPyFilePath}")
         py = open(pyFile, "r")
         for line in py:
             if (line.startswith("from") or line.startswith("import")): #handle import parsing
