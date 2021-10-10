@@ -59,7 +59,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../inc)
         cmake_file.write(f"{cmake_open}\n")
         cmake_file.write(f"project ({self.projectName})\n")
 
-        if (self.projectType == "bin" or self.projectType == "test"):
+        if (self.projectType in ["bin", "test"]):
             logging.info("Addind binary specific code")
             
             cmake_file.write (f"add_executable ({self.projectName} {self.get_cxx_files ('../src')})\n")
@@ -71,7 +71,7 @@ find_package(Threads REQUIRED)
             cmake_file.write (f"target_link_directories({self.projectName} " + "PUBLIC ${CMAKE_SOURCE_DIR}/../lib)\n")
             cmake_file.write (f"target_link_libraries({self.projectName} Threads::Threads {self.get_libs('../lib')})")
 
-        if (self.projectType == "lib"):
+        if (self.projectType in ["lib", "mod"]):
             logging.info("Addind library specific code")
 
             #TODO: support windows install targets
@@ -85,6 +85,8 @@ find_package(Threads REQUIRED)
         cmake_close = '''
 '''
         cmake_file.write (f"{cmake_close}")
+
+        cmake_file.close()
 
     def CMake(self):
         self.RunCommand("cmake .")

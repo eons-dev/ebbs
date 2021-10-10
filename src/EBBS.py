@@ -7,6 +7,10 @@ class EBBS(e.Executor):
     def __init__(self):
         super().__init__(name="eons Basic Build System", descriptionStr="A hackable build system for all languages!")
 
+        self.registerDirectories['language']
+        self.registerDirectories['inc/language']
+        self.registerDirectories['ebbs/inc/language']
+
     #Override of eons.Executor method. See that class for details
     def RegisterAllClasses(self):
         super().RegisterAllClasses()
