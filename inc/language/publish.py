@@ -2,9 +2,8 @@ import os
 import logging
 import shutil
 import requests
-from distutils.file_util import copy_file
-from distutils.dir_util import copy_tree, mkpath
 from ebbs import Builder
+from ebbs import OtherBuildError
 
 class publish(Builder):
     def __init__(self, name="Wordpress Plugin Builder"):
@@ -19,7 +18,7 @@ class publish(Builder):
     def PreBuild(self, **kwargs):
         self.repo = kwargs.get("repo")
         if (not len(self.repo)):
-            raise self.OtherBuildError(f'Repo credentials required to publish package')
+            raise OtherBuildError(f'Repo credentials required to publish package')
 
         self.targetFileName = f'{self.projectName}.zip'
         self.targetFile = os.path.join(self.rootPath, self.targetFileName)
@@ -60,6 +59,6 @@ class publish(Builder):
 
         if (packageQuery.status_code != 200):
             logging.error(f'Failed to publish {self.projectName}')
-            raise self.OtherBuildError(f'Failed to publish {self.projectName}')
+            raise OtherBuildError(f'Failed to publish {self.projectName}')
 
         logging.info(f'Successfully published {self.projectName}')

@@ -4,6 +4,7 @@ from abc import abstractmethod
 from subprocess import Popen, PIPE, STDOUT
 from distutils.dir_util import mkpath
 import eons as e
+from .Exceptions import *
 
 class Builder(e.UserFunctor):
     def __init__(self, name=e.INVALID_NAME()):
@@ -22,15 +23,6 @@ class Builder(e.UserFunctor):
     @abstractmethod
     def Build(self):
         raise NotImplementedError
-
-    #All builder errors
-    class BuildError(Exception): pass
-
-    #Exception used for miscillaneous build errors.
-    class OtherBuildError(BuildError): pass
-
-    #Project types can be things like "lib" for library, "bin" for binary, etc. Generally, they are any string that evaluates to a different means of building code.
-    class ProjectTypeNotSupported(BuildError): pass
 
     #Projects should have a name of {project-type}_{project-name}.
     #For information on how projects should be labelled see: https://eons.dev/convention/naming/
@@ -87,7 +79,7 @@ class Builder(e.UserFunctor):
         self.PopulateProjectDetails()
         self.PreBuild(**kwargs)
         if (len(self.supportedProjectTypes) and self.projectType not in self.supportedProjectTypes):
-            raise self.ProjectTypeNotSupported(f"{self.projectType} is not supported. Supported project types for {self.name} are {self.supportedProjectTypes}")
+            raise ProjectTypeNotSupported(f"{self.projectType} is not supported. Supported project types for {self.name} are {self.supportedProjectTypes}")
         logging.info(f"Using {self.name} to build {self.projectName}, a {self.projectType}")
         self.Build()
         self.PostBuild(**kwargs)

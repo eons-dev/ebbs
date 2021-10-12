@@ -5,6 +5,7 @@ import requests
 import eons as e
 from zipfile import ZipFile
 from distutils.dir_util import mkpath
+from .Exceptions import *
 
 class EBBS(e.Executor):
 
@@ -53,7 +54,7 @@ class EBBS(e.Executor):
                 builder = self.GetRegistered(self.args.lang)
             except Exception as e:
                 logging.error(f'Could not find builder for {self.args.lang}: {e}')
-                raise Builder.OtherBuildError(f'Could not get builder for {self.args.lang}')
+                raise OtherBuildError(f'Could not get builder for {self.args.lang}')
                 return #just for extra safety.
 
         repoData = {}
@@ -65,7 +66,7 @@ class EBBS(e.Executor):
                 'password': self.args.password
             }
 
-        builder(dir = self.args.dir, repo = repoData, **vars(self.extraArgs))
+        builder(dir = self.args.dir, repo = repoData, **self.extraArgs)
 
     #Attempts to download the given package from the repo url specified in calling args.
     #Will refresh registered builders upon success
