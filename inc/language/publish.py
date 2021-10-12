@@ -11,7 +11,7 @@ class publish(Builder):
 
         self.requiredKWArgs.append("repo")
         self.requiredKWArgs.append("--version")
-        self.requiredKWArgs.append("--visibility")
+        # self.requiredKWArgs.append("--visibility") # this is optional. Defaults to private
 
         self.supportedProjectTypes = [] #all
 
@@ -25,13 +25,17 @@ class publish(Builder):
 
         self.packageName = f'{self.projectType}_{self.projectName}'
 
+        self.packageVisibility = 'private'
+        if "--visibility" in kwargs:
+            self.packageVisibility = kwargs.get("--visibility")
+
         self.requestData = {
             #user and pass included in POST, rather than requests.auth.HTTPBasicAuth, because of a limitation in the Infrastructure API.
             'username': self.repo['username'],
             'password': self.repo['password'],
             'package_name': self.packageName,
             'version': kwargs.get("--version"),
-            'visibility': kwargs.get("--visibility")
+            'visibility': self.packageVisibility
         }
 
     # Required Builder method. See that class for details.
