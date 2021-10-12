@@ -40,7 +40,6 @@ class publish(Builder):
         if (os.path.exists(self.targetFile)):
             os.remove(self.targetFile)
 
-        os.chdir(self.buildPath)
         shutil.make_archive(self.targetFile[:-4], 'zip', self.buildPath)
         # archive = ZipFile(self.targetFile, 'w')
         # for dirname, subdirs, files in os.walk(self.workingPath):

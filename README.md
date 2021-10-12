@@ -72,12 +72,13 @@ Out of the box, you can build:
 * C++
 * Python (yes, this repository is circularly dependent on itself. That's how you know it's stable!)
 
-You can also "publish" packages to an online repository with `-l publish`. This is just another `Builder` and can be extended or substituted as with any other "language".
+You can also "publish" packages to an online repository with `-l publish`. This is just another `Builder` and can be extended or substituted as with any other "language".  
+When publishing your code, you can use `--visibility 'private'` or `--visibility 'publish'`. Anything other than `private` or `publish` will fail, unless you build your own repository api. 
 
 Ebbs will try to download a language package if the one specified is not found in your workspace.
 You may add credentials and even provide your own repo url for searching. If credentials are supplied, private packages will be searched instead of public ones. The same credentials (or those with write access) are required for publishing.
 
-By default, ebbs will use the infrastructure.tech package repository. See the [Infrastructure API docs](https://github.com/infrastructure-tech/api) for more info.
+By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure API docs](https://github.com/infrastructure-tech/api) for more info.
 
 **IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
 For example, if you want to use `-l my_language` from the repository, ebbs will attempt to download "build_my_language". The package zip is then downloaded, extracted, registered, and instantiated.  
