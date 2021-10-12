@@ -4,17 +4,89 @@
 
 This project derives from [eons](https://github.com/eons-dev/lib_eons) to improve ease-of-hacking ;)
 
+## Design
+
+Ebbs builds packages or whatever with `Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" that can then be shared with colleagues, etc. For example, you could create "my_language.py", containing something like:
+```python
+from ebbs import Builder
+
+class my_language(Builder):
+    def __init__(self, name="My Language"):
+        super().__init__(name)
+        
+        self.supportedProjectTypes = [] #all
+        #or
+        # self.supportedProjectTypes.append("lib")
+        # self.supportedProjectTypes.append("bin")
+        # self.supportedProjectTypes.append("test")
+        
+        #-- is used for consistency and highly recommended.
+        #self.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods)
+        self.requiredKWArgs.append("--my-cli-option")
+        
+    #Use --my-cli-option
+    def PreBuild(self, **kwargs):
+        self.my_option = kwargs.get("--my-cli-option")
+        
+    #Required Builder method. See that class for details.
+    def Build(self):
+        #DO STUFF!
+```
+That file can then go in a "./ebbs/inc/language" directory, perhaps within your project repository.  
+ebbs can then be invoked with something like: `ebbs -l my_language ./generated --my-cli-option my-value`, which will run your Build method from "./generated".
+
+The `Builder` class will split the folder containing the buildPath (e.g. "./generated) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used language's `supportedProjectTypes`. If no match if found, the build is aborted prior to executing the language.
+
+`Builder` also provides the following path variables by default:
+```python
+        self.buildPath = path #The one specified on the cli
+        self.rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
+        self.srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
+        self.incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
+        self.depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
+        self.libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
+```
+As well as the following methods:  
+(See Builder.py for more details)
+```python
+def CreateFile(self, file, mode="w+")
+def RunCommand(self, command)
+```
+
+When a `Builder` is executed, the following are called in order:  
+(kwargs is the same for all)
+```python
+self.ValidateArgs(**kwargs) # <- not recommended to override.
+self.PreCall(**kwargs) # <- virtual
+#Builder sets the above mentioned variables here
+self.PreBuild(**kwargs) # <- virtual
+#Supported project types are checked here
+self.Build() # <- abstract method for you 
+self.PostBuild(**kwargs) # <- virtual
+self.PostCall(**kwargs) # <- virtual
+```
+
 ## Supported Languages
 
-Currently supporting:
+Out of the box, you can build:
 * C++
-* Python
+* Python (yes, this repository is circularly dependent on itself. That's how you know it's stable!)
 
-(yes, this repository is circularly dependent on itself. That's how you know it's stable!)
+You can also "publish" packages to an online repository with `-l publish`. This is just another `Builder` and can be extended or substituted as with any other "language".
+
+Ebbs will try to download a language package if the one specified is not found in your workspace.
+You may add credentials and even provide your own repo url for searching. If credentials are supplied, private packages will be searched instead of public ones. The same credentials (or those with write access) are required for publishing.
+
+By default, ebbs will use the infrastructure.tech package repository. See the [Infrastructure API docs](https://github.com/infrastructure-tech/api) for more info.
+
+**IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
+For example, if you want to use `-l my_language` from the repository, ebbs will attempt to download "build_my_language". The package zip is then downloaded, extracted, registered, and instantiated.  
+All packages are .zip files.
 
 ## Prerequisites
 * python >= 3.6.3
-* eons >= 1.1.0
+* eons >= 1.1.5
+* requests>=2.26.0 (for package downloading and publishing)
 
 ## Installation
 `pip install ebbs`
@@ -27,6 +99,25 @@ This usually means your project has the name of `bin_my-project`, `lib_my-projec
 
 Specific usage is language specific but will generally be `ebbs -l LANGUAGE BUILD_PATH`.  
 Use `ebbs --help` for help ;)
+
+Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming schemes you would like instead!
+
+### Repository
+
+Online repository credentials can be specified with:
+```
+--repo-store
+--repo-url
+--repo-username
+--repo-password
+```
+
+These credentials, when used, are passed to the language Builder. This is done primarily for publishing. Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
+
+Publishing requires the following additional arguments:
+```
+
+```
 
 ### C++
 

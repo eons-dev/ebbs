@@ -23,8 +23,14 @@ class Builder(e.UserFunctor):
     def Build(self):
         raise NotImplementedError
 
+    #All builder errors
+    class BuildError(Exception): pass
+
+    #Exception used for miscillaneous build errors.
+    class OtherBuildError(BuildError): pass
+
     #Project types can be things like "lib" for library, "bin" for binary, etc. Generally, they are any string that evaluates to a different means of building code.
-    class ProjectTypeNotSupported(Exception): pass
+    class ProjectTypeNotSupported(BuildError): pass
 
     #Projects should have a name of {project-type}_{project-name}.
     #For information on how projects should be labelled see: https://eons.dev/convention/naming/
@@ -33,7 +39,7 @@ class Builder(e.UserFunctor):
         details = os.path.basename(os.path.abspath(os.path.join(self.buildPath,"../"))).split("_")
         self.projectType = details[0]
         if (len(details) > 1):
-            self.projectName = ''.join(details[1:])
+            self.projectName = '_'.join(details[1:])
         
     #Sets the build path that should be used by children of *this.
     #Also sets src, inc, lib, and dep paths, if they are present.
@@ -67,14 +73,24 @@ class Builder(e.UserFunctor):
         else:
             self.libPath = None
 
+    #Hook for any pre-build configuration
+    def PreBuild(self, **kwargs):
+        pass
+
+    #Hook for any post-build configuration
+    def PostBuild(self, **kwargs):
+        # TODO: Do we need to clear self.buildPath here?
+        pass
+
     def UserFunction(self, **kwargs):
         self.SetBuildPath(kwargs.get("dir"))
         self.PopulateProjectDetails()
-        if (self.projectType not in self.supportedProjectTypes):
+        self.PreBuild(**kwargs)
+        if (len(self.supportedProjectTypes) and self.projectType not in self.supportedProjectTypes):
             raise self.ProjectTypeNotSupported(f"{self.projectType} is not supported. Supported project types for {self.name} are {self.supportedProjectTypes}")
         logging.info(f"Using {self.name} to build {self.projectName}, a {self.projectType}")
         self.Build()
-        #TODO: Do we need to clear self.buildPath here?
+        self.PostBuild(**kwargs)
 
     #RETURNS: an opened file object for writing.
     #Creates the path if it does not exist.
