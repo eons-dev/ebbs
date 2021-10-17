@@ -26,17 +26,26 @@ class publish(Builder):
         self.packageName = f'{self.projectType}_{self.projectName}'
 
         self.packageVisibility = 'private'
-        if "--visibility" in kwargs:
+        if ("--visibility" in kwargs):
             self.packageVisibility = kwargs.get("--visibility")
 
+        self.packageType = ''
+        if ("--package-type" in kwargs):
+            self.packageType = kwargs.get("--package-type")
+
+        self.desciption = ''
+        if ("--desciption" in kwargs):
+            self.desciption = kwargs.get("--desciption")
+
         self.requestData = {
-            #user and pass included in POST, rather than requests.auth.HTTPBasicAuth, because of a limitation in the Infrastructure API.
-            'username': self.repo['username'],
-            'password': self.repo['password'],
             'package_name': self.packageName,
             'version': kwargs.get("--version"),
             'visibility': self.packageVisibility
         }
+        if (self.packageType):
+                self.requestData['package_type'] = self.packageType
+        if (self.desciption):
+            self.requestData['description'] = self.desciption
 
     # Required Builder method. See that class for details.
     def Build(self):
@@ -45,12 +54,6 @@ class publish(Builder):
             os.remove(self.targetFile)
 
         shutil.make_archive(self.targetFile[:-4], 'zip', self.buildPath)
-        # archive = ZipFile(self.targetFile, 'w')
-        # for dirname, subdirs, files in os.walk(self.workingPath):
-        #     archive.write(dirname)
-        #     for filename in files:
-        #         archive.write(os.path.join(dirname, filename))
-        # archive.close()
         logging.debug("Achive created")
 
         logging.debug("Uploading archive to repository")
@@ -58,7 +61,7 @@ class publish(Builder):
             'package': open(self.targetFile, 'rb')
         }
         logging.debug(f'Request data: {self.requestData}')
-        packageQuery = requests.post(f'{self.repo["url"]}/publish', data=self.requestData, files=files)
+        packageQuery = requests.post(f"{self.repo['url']}/publish", auth=requests.auth.HTTPBasicAuth(self.repo['username'], self.repo['password']), data=self.requestData, files=files)
 
         if (packageQuery.status_code != 200):
             logging.error(f'Failed to publish {self.projectName}')

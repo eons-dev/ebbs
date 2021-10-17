@@ -74,12 +74,14 @@ class EBBS(e.Executor):
     #Does not guarantee new builders are made available; errors need to be handled by the caller.
     def DownloadPackage(self, packageName):
         queryData = {
-            #user and pass included in POST, rather than requests.auth.HTTPBasicAuth, because of a limitation in the Infrastructure API.
-            'username' : self.args.username,
-            'password' : self.args.password,
-            'package_name' : packageName
+            'package_name': packageName
         }
-        packageQuery = requests.post(f'{self.args.url}/download', data=queryData)
+
+        auth = None
+        if self.args.username and self.args.password:
+            auth = requests.auth.HTTPBasicAuth(self.args.username, self.args.password)
+
+        packageQuery = requests.post(f'{self.args.url}/download', auth=auth, data=queryData)
 
         if (packageQuery.status_code != 200 or not len(packageQuery.content)):
             logging.error(f'Unable to download {packageName}')
