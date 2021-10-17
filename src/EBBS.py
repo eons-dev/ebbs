@@ -73,15 +73,14 @@ class EBBS(e.Executor):
     #RETURNS void
     #Does not guarantee new builders are made available; errors need to be handled by the caller.
     def DownloadPackage(self, packageName):
-        queryData = {
-            'package_name': packageName
-        }
+
+        url = f'{self.args.url}/download?package_name={packageName}'
 
         auth = None
         if self.args.username and self.args.password:
             auth = requests.auth.HTTPBasicAuth(self.args.username, self.args.password)
 
-        packageQuery = requests.post(f'{self.args.url}/download', auth=auth, data=queryData)
+        packageQuery = requests.get(url, auth=auth)
 
         if (packageQuery.status_code != 200 or not len(packageQuery.content)):
             logging.error(f'Unable to download {packageName}')
