@@ -1,2 +1,2 @@
-eons >= 1.1.5
+eons == 1.1.5
 requests>=2.26.0
