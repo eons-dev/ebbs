@@ -76,7 +76,7 @@ You can also "publish" packages to an online repository with `-l publish`. This 
 When publishing your code, you can use `--visibility 'private'` or `--visibility 'publish'`. Anything other than `private` or `publish` will fail, unless you build your own repository api. 
 
 Ebbs will try to download a language package if the one specified is not found in your workspace.
-You may add credentials and even provide your own repo url for searching. If credentials are supplied, private packages will be searched instead of public ones. The same credentials (or those with write access) are required for publishing.
+You may add credentials and even provide your own repo url for searching. If credentials are supplied, private packages will be searched before public ones. The same credentials (or those with write access) are required for publishing.
 
 By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure API docs](https://github.com/infrastructure-tech/api) for more info.
 
@@ -117,7 +117,11 @@ These credentials, when used, are passed to the language Builder. This is done p
 
 Publishing requires the following additional arguments:
 ```
-
+--version
+```
+and, optionally:
+```
+--visibility
 ```
 
 ### C++

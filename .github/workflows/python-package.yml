@@ -36,6 +36,8 @@ jobs:
     - name: Build package for testing
       run: |
         ebbs -l py generated
+        #build again, which should test if ebbs can build itself.
+        ebbs -v -l py generated
         cat generated/*/*.py
     - name: Test with pytest
       run: |

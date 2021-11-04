@@ -1,5 +1,6 @@
 import os
 import logging
+import shutil
 from distutils.file_util import copy_file
 from distutils.dir_util import copy_tree, mkpath
 from ebbs import Builder
@@ -26,6 +27,9 @@ class py(Builder):
     #Required Builder method. See that class for details.
     def Build(self):
         self.buildPath = os.path.abspath(os.path.join(self.buildPath, self.projectName))
+        if (os.path.exists(self.buildPath)):
+            logging.info(f"DELETING {self.buildPath}")
+            shutil.rmtree(self.buildPath)
         mkpath(self.buildPath)
         os.chdir(self.buildPath)
         logging.info(f"Using build path {self.buildPath}")

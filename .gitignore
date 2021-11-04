@@ -131,3 +131,6 @@ dmypy.json
 # EBBS build folder
 generated/
 ebbs/
+
+# Jetbrains
+/.idea/
