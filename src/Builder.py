@@ -29,7 +29,7 @@ class Builder(e.UserFunctor):
     #For information on how projects should be labelled see: https://eons.dev/convention/naming/
     #For information on how projects should be organized, see: https://eons.dev/convention/uri-names/
     def PopulateProjectDetails(self):
-        details = os.path.basename(os.path.abspath(os.path.join(self.buildPath,"../"))).split("_")
+        details = os.path.basename(self.rootPath).split("_")
         self.projectType = details[0]
         if (len(details) > 1):
             self.projectName = '_'.join(details[1:])
