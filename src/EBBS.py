@@ -48,5 +48,5 @@ class EBBS(e.Executor):
                 'password': self.args.repo_password
             }
 
-        builder(dir=self.args.dir, repo=repoData, **self.extraArgs)
+        builder(executor=self, dir=self.args.dir, repo=repoData, **self.extraArgs)
 
