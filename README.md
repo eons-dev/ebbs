@@ -13,7 +13,8 @@ ebbs assumes that your project is named in accordance with [eons naming conventi
 
 This usually means your project has the name of `bin_my-project`, `lib_my-project`, `test_my-project`, etc.
 
-Specific usage is language specific but will generally be `ebbs -l LANGUAGE BUILD_PATH`.  
+You must invoke this tool from the root directory of your project. For `{project-type}_{project-name}/build/path`, you would use `ebbs -l {language} build/path`, which would tell ebbs to build `{project-name}` as a `{project-type}` with the `{language}` builder.
+
 Use `ebbs --help` for help ;)
 
 Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming schemes you would like instead!

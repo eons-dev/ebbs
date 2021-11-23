@@ -39,27 +39,24 @@ class Builder(e.UserFunctor):
         self.buildPath = path
 
         #TODO: Consolidate this code with more attribute hacks?
-        rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
-        if (os.path.isdir(rootPath)):
-            self.rootPath = rootPath
-        else:
-            self.rootPath = None
-        srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
+        self.rootPath = os.path.abspath(os.getcwd())
+
+        srcPath = os.path.abspath(os.path.join(self.rootPath, "src"))
         if (os.path.isdir(srcPath)):
             self.srcPath = srcPath
         else:
             self.srcPath = None
-        incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
+        incPath = os.path.abspath(os.path.join(self.rootPath, "inc"))
         if (os.path.isdir(incPath)):
             self.incPath = incPath
         else:
             self.incPath = None
-        depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
+        depPath = os.path.abspath(os.path.join(self.rootPath, "dep"))
         if (os.path.isdir(depPath)):
             self.depPath = depPath
         else:
             self.depPath = None
-        libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
+        libPath = os.path.abspath(os.path.join(self.rootPath, "lib"))
         if (os.path.isdir(srcPath)):
             self.libPath = libPath
         else:
