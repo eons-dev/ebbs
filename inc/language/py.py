@@ -191,4 +191,4 @@ if __name__ == '__main__':
 
     #Installs the built package!
     def InstallPackage(self):
-        self.RunCommand("pip install . -U")
+        self.RunCommand("python -m pip install . -U")

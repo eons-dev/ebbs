@@ -1,5 +1,6 @@
 import os
 import logging
+import platform
 from abc import abstractmethod
 from subprocess import Popen, PIPE, STDOUT
 from distutils.dir_util import mkpath
@@ -72,6 +73,8 @@ class Builder(e.UserFunctor):
         pass
 
     def UserFunction(self, **kwargs):
+        self.executor = kwargs.get("executor")
+        self.os = platform.system()
         self.SetBuildPath(kwargs.get("dir"))
         self.PopulateProjectDetails()
         self.PreBuild(**kwargs)
