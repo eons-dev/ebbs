@@ -6,7 +6,7 @@ from ebbs import Builder
 from ebbs import OtherBuildError
 
 class publish(Builder):
-    def __init__(self, name="Wordpress Plugin Builder"):
+    def __init__(self, name="Publisher"):
         super().__init__(name)
 
         self.requiredKWArgs.append("repo")

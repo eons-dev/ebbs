@@ -2,7 +2,83 @@
 
 ![build](https://github.com/eons-dev/bin_ebbs/actions/workflows/python-package.yml/badge.svg)
 
-This project derives from [eons](https://github.com/eons-dev/lib_eons) to improve ease-of-hacking ;)
+This project derives from [eons](https://github.com/eons-dev/lib_eons) for easy hacking ;)
+
+## Installation
+`pip install ebbs`
+
+## Usage
+
+ebbs assumes that your project is named in accordance with [eons naming conventions](https://eons.dev/convention/naming/) as well as [eons directory conventions](https://eons.dev/convention/uri-names/)
+
+This usually means your project has the name of `bin_my-project`, `lib_my-project`, `test_my-project`, etc.
+
+Specific usage is language specific but will generally be `ebbs -l LANGUAGE BUILD_PATH`.  
+Use `ebbs --help` for help ;)
+
+Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming schemes you would like instead!
+
+### Repository
+
+Online repository credentials can be specified with:
+```
+--repo-store
+--repo-url
+--repo-username
+--repo-password
+```
+
+These credentials, when used, are passed to the language Builder. This is done primarily for publishing. Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
+
+Publishing requires the following additional arguments:
+```
+--version
+```
+and, optionally:
+```
+--visibility
+```
+More information below on repository usage and publishing.
+
+### C++
+
+Instead of writing and managing cmake files throughout your directory tree, you can use `ebbs -l cpp` from a `build` folder and all .h and .cpp files in your source tree will be discovered and added to a CMakeLists.txt, which is then built with cmake and make, so you get the compiled product you want.
+
+Supported project types:
+* lib
+* bin
+* test (alias for bin)
+
+Prerequisites:
+* cmake >= 3.1.1
+* make >= whatever
+* g++ or equivalent
+
+Currently lacking support for auto-discovered tool chains and build targets - only compiles for the system it is run on.
+
+### Python
+
+Do you hate having empty `__init__.py` files and other nonsense strewn about your project? This fixes that. Somehow.  
+To build a python library or binary, go to the root of your project and run `ebbs -l py generated`.  
+This will copy all `*.py` files out of `src` and compile them into a single `PROJECT_NAME.py` in a dependency-aware fashion.  
+It will also copy all files and directories from `inc` and add them to the build folder.  
+Then, it creates python project files, like `__main__.py` and `__init__.py`s.  
+Lastly, it invokes python's build package and pip to build and install your code. This will fail if the necessary dependencies are not installed.
+
+IMPORTANT: DO NOT USE THIS IN A `build` FOLDER!  
+Building packages from a folder named "build" with `python -m build` (and setuptools?) will result in an empty package as all `*.py` files in that directory are ignored.
+Someone please fix this...
+
+Supported project types:
+* bin
+* lib
+
+Prerequisites:
+* `build` python package
+* valid setup and pyproject.toml files  
+
+See [how to package python projects](https://packaging.python.org/tutorials/packaging-projects/) for information on required files.  
+NOTE: Setup files are not created for you, since there is some variability in what you might want.
 
 ## Design
 
@@ -83,83 +159,3 @@ By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech)
 **IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
 For example, if you want to use `-l my_language` from the repository, ebbs will attempt to download "build_my_language". The package zip is then downloaded, extracted, registered, and instantiated.  
 All packages are .zip files.
-
-## Prerequisites
-* python >= 3.6.3
-* eons >= 1.1.5
-* requests>=2.26.0 (for package downloading and publishing)
-
-## Installation
-`pip install ebbs`
-
-## Usage
-
-ebbs assumes that your project is named in accordance with [eons naming conventions](https://eons.dev/convention/naming/) as well as [eons directory conventions](https://eons.dev/convention/uri-names/)
-
-This usually means your project has the name of `bin_my-project`, `lib_my-project`, `test_my-project`, etc.
-
-Specific usage is language specific but will generally be `ebbs -l LANGUAGE BUILD_PATH`.  
-Use `ebbs --help` for help ;)
-
-Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming schemes you would like instead!
-
-### Repository
-
-Online repository credentials can be specified with:
-```
---repo-store
---repo-url
---repo-username
---repo-password
-```
-
-These credentials, when used, are passed to the language Builder. This is done primarily for publishing. Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
-
-Publishing requires the following additional arguments:
-```
---version
-```
-and, optionally:
-```
---visibility
-```
-
-### C++
-
-Instead of writing and managing cmake files throughout your directory tree, you can use `ebbs -l cpp` from a `build` folder and all .h and .cpp files in your source tree will be discovered and added to a CMakeLists.txt, which is then built with cmake and make, so you get the compiled product you want.
-
-Supported project types:
-* lib
-* bin
-* test (alias for bin)
-
-Prerequisites:
-* cmake >= 3.1.1
-* make >= whatever
-* g++ or equivalent
-
-Currently lacking support for auto-discovered tool chains and build targets - only compiles for the system it is run on.
-
-### Python
-
-Do you hate having empty `__init__.py` files and other nonsense strewn about your project? This fixes that. Somehow.  
-To build a python library or binary, go to the root of your project and run `ebbs -l py generated`.  
-This will copy all `*.py` files out of `src` and compile them into a single `PROJECT_NAME.py` in a dependency-aware fashion.  
-It will also copy all files and directories from `inc` and add them to the build folder.  
-Then, it creates python project files, like `__main__.py` and `__init__.py`s.  
-Lastly, it invokes python's build package and pip to build and install your code. This will fail if the necessary dependencies are not installed.
-
-IMPORTANT: DO NOT USE THIS IN A `build` FOLDER!  
-Building packages from a folder named "build" with `python -m build` (and setuptools?) will result in an empty package as all `*.py` files in that directory are ignored.
-Someone please fix this...
-
-Supported project types:
-* bin
-* lib
-
-Prerequisites:
-* `build` python package
-* valid setup and pyproject.toml files  
-
-See [how to package python projects](https://packaging.python.org/tutorials/packaging-projects/) for information on required files.  
-NOTE: Setup files are not created for you, since there is some variability in what you might want.
