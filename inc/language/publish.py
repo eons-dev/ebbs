@@ -21,7 +21,7 @@ class publish(Builder):
             raise OtherBuildError(f'Repo credentials required to publish package')
 
         self.targetFileName = f'{self.projectName}.zip'
-        self.targetFile = os.path.join(self.rootPath, self.targetFileName)
+        self.targetFile = os.path.join(self.repo['store'], self.targetFileName)
 
         self.packageName = f'{self.projectType}_{self.projectName}'
 
@@ -33,9 +33,9 @@ class publish(Builder):
         if ("--package-type" in kwargs):
             self.packageType = kwargs.get("--package-type")
 
-        self.desciption = ''
+        self.description = ''
         if ("--desciption" in kwargs):
-            self.desciption = kwargs.get("--desciption")
+            self.description = kwargs.get("--desciption")
 
         self.requestData = {
             'package_name': self.packageName,
@@ -44,8 +44,8 @@ class publish(Builder):
         }
         if (self.packageType):
                 self.requestData['package_type'] = self.packageType
-        if (self.desciption):
-            self.requestData['description'] = self.desciption
+        if (self.description):
+            self.requestData['description'] = self.description
 
     # Required Builder method. See that class for details.
     def Build(self):
@@ -54,7 +54,7 @@ class publish(Builder):
             os.remove(self.targetFile)
 
         shutil.make_archive(self.targetFile[:-4], 'zip', self.buildPath)
-        logging.debug("Achive created")
+        logging.debug("Archive created")
 
         logging.debug("Uploading archive to repository")
         files = {
