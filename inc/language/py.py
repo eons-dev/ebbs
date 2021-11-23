@@ -172,6 +172,8 @@ if __name__ == '__main__':
         else:
             return
 
+        #This nonsense is required because we need `cp incPath/* buildpath/` behavior instead of `cp incPath buildpath/`
+        #TODO: is there a better way?
         for thing in os.listdir(self.incPath):
             thingPath = os.path.join(self.incPath, thing)
             destPath = os.path.join(self.buildPath, thing)
