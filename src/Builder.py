@@ -33,7 +33,9 @@ class Builder(e.UserFunctor):
         self.projectType = details[0]
         if (len(details) > 1):
             self.projectName = '_'.join(details[1:])
-        
+        self.os = platform.system()
+        self.architecture = platform.machine()
+
     #Sets the build path that should be used by children of *this.
     #Also sets src, inc, lib, and dep paths, if they are present.
     def SetBuildPath(self, path):
@@ -74,7 +76,6 @@ class Builder(e.UserFunctor):
 
     def UserFunction(self, **kwargs):
         self.executor = kwargs.get("executor")
-        self.os = platform.system()
         self.SetBuildPath(kwargs.get("dir"))
         self.PopulateProjectDetails()
         self.PreBuild(**kwargs)

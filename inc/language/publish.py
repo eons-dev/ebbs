@@ -20,11 +20,6 @@ class publish(Builder):
         if (not len(self.repo)):
             raise OtherBuildError(f'Repo credentials required to publish package')
 
-        self.targetFileName = f'{self.projectName}.zip'
-        self.targetFile = os.path.join(self.repo['store'], self.targetFileName)
-
-        self.packageName = f'{self.projectType}_{self.projectName}'
-
         self.packageVisibility = 'private'
         if ("--visibility" in kwargs):
             self.packageVisibility = kwargs.get("--visibility")
@@ -33,9 +28,18 @@ class publish(Builder):
         if ("--package-type" in kwargs):
             self.packageType = kwargs.get("--package-type")
 
-        self.description = ''
-        if ("--desciption" in kwargs):
-            self.description = kwargs.get("--desciption")
+        self.desciption = ''
+        if ("--description" in kwargs):
+            self.description = kwargs.get("--description")
+
+        nameComponents = [self.projectType, self.projectName]
+        if (self.packageType):
+            nameComponents.append(self.packageType)
+
+        self.packageName = '_'.join(nameComponents)
+
+        self.targetFileName = f'{self.packageName}.zip'
+        self.targetFile = os.path.join(self.repo['store'], self.targetFileName)
 
         self.requestData = {
             'package_name': self.packageName,
@@ -43,8 +47,8 @@ class publish(Builder):
             'visibility': self.packageVisibility
         }
         if (self.packageType):
-                self.requestData['package_type'] = self.packageType
-        if (self.description):
+            self.requestData['package_type'] = self.packageType
+        if (self.desciption):
             self.requestData['description'] = self.description
 
     # Required Builder method. See that class for details.
@@ -62,6 +66,13 @@ class publish(Builder):
         }
         logging.debug(f'Request data: {self.requestData}')
         packageQuery = requests.post(f"{self.repo['url']}/publish", auth=requests.auth.HTTPBasicAuth(self.repo['username'], self.repo['password']), data=self.requestData, files=files)
+
+        logging.debug(f'''Request sent
+Response: {packageQuery.status_code}
+URL: {packageQuery.request.url}
+Headers: {packageQuery.request.headers}
+Content: {packageQuery.content.decode('ascii')}
+''')
 
         if (packageQuery.status_code != 200):
             logging.error(f'Failed to publish {self.projectName}')
