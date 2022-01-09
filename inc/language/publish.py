@@ -2,6 +2,8 @@ import os
 import logging
 import shutil
 import requests
+import jsonpickle
+import base64
 from ebbs import Builder
 from ebbs import OtherBuildError
 
@@ -53,7 +55,7 @@ class publish(Builder):
 
     # Required Builder method. See that class for details.
     def Build(self):
-        logging.debug("Creating archive")
+        logging.debug(f"Creating archive {self.targetFile}")
         if (os.path.exists(self.targetFile)):
             os.remove(self.targetFile)
 
@@ -61,17 +63,19 @@ class publish(Builder):
         logging.debug("Archive created")
 
         logging.debug("Uploading archive to repository")
-        files = {
-            'package': open(self.targetFile, 'rb')
-        }
-        logging.debug(f'Request data: {self.requestData}')
-        packageQuery = requests.post(f"{self.repo['url']}/publish", auth=requests.auth.HTTPBasicAuth(self.repo['username'], self.repo['password']), data=self.requestData, files=files)
+        #NOTE: jsonpickle can b64 encode binary data but we want to do it first to avoid an extraneous {"py/b64":...} object being added to the request body.
+        self.requestData['package'] = str(base64.b64encode(open(self.targetFile, 'rb').read()).decode('ascii'))
+        requestData = jsonpickle.encode(self.requestData)
+        logging.debug(f'Request data: {requestData}')
+        packageQuery = requests.post(f"{self.repo['url']}/publish", auth=requests.auth.HTTPBasicAuth(self.repo['username'], self.repo['password']), data=requestData)
 
-        logging.debug(f'''Request sent
+        logging.debug(f'''Request sent...
+----------------------------------------        
 Response: {packageQuery.status_code}
 URL: {packageQuery.request.url}
 Headers: {packageQuery.request.headers}
-Content: {packageQuery.content.decode('ascii')}
+Content: {packageQuery.content}
+----------------------------------------
 ''')
 
         if (packageQuery.status_code != 200):

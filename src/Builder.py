@@ -60,7 +60,7 @@ class Builder(e.UserFunctor):
         else:
             self.depPath = None
         libPath = os.path.abspath(os.path.join(self.rootPath, "lib"))
-        if (os.path.isdir(srcPath)):
+        if (os.path.isdir(libPath)):
             self.libPath = libPath
         else:
             self.libPath = None
@@ -101,4 +101,4 @@ class Builder(e.UserFunctor):
           line = p.stdout.readline()
           if (not line):
             break
-          print(line.decode('ascii')[:-1]) #[:-1] to strip excessive new lines.
+          print(line.decode('utf8')[:-1]) #[:-1] to strip excessive new lines.

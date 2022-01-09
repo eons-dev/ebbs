@@ -1,6 +1,7 @@
 import os
 import logging
 import shutil
+import jsonpickle
 from distutils.file_util import copy_file
 from distutils.dir_util import copy_tree, mkpath
 from ebbs import Builder
@@ -26,14 +27,30 @@ class cpp(Builder):
 
     # Required Builder method. See that class for details.
     def Build(self):
+        config_file = open(os.path.join(self.rootPath, "config.json"), "r")
+        self.config = jsonpickle.decode(config_file.read())
+
         self.buildPath = os.path.join(self.rootPath, self.buildPath)
         if (os.path.exists(self.buildPath)):
             logging.info(f"DELETING {self.buildPath}")
             shutil.rmtree(self.buildPath)
         mkpath(self.buildPath)
         os.chdir(self.buildPath)
-        self.packagePath = os.path.join(self.buildPath, self.projectName)
+
+        self.packageName = self.projectName;
+        if ("name" in self.config):
+            self.packageName = self.config["name"]
+
+        self.packagePath = os.path.join(self.buildPath, self.packageName)
         mkpath(self.packagePath)
+
+        self.cpp_version = 11;
+        if ("cpp_version" in self.config):
+            self.cpp_version = self.config["cpp_version"]
+
+        self.cmake_version = "3.1.1";
+        if ("cmake_version" in self.config):
+            self.cmake_version = self.config["cmake_version"]
 
         logging.debug(f"Building in {self.buildPath}")
         logging.debug(f"Packaging in {self.packagePath}")
@@ -46,7 +63,7 @@ class cpp(Builder):
         if (self.projectType in ["lib"]):
             copy_tree(self.incPath, self.packagePath)
 
-    def get_cxx_files(self, directory, seperator=" "):
+    def GetSourceFiles(self, directory, seperator=" "):
         ret = ""
         for root, dirs, files in os.walk(directory):
             for f in files:
@@ -56,7 +73,7 @@ class cpp(Builder):
                     ret += f"{os.path.join(root, f)}{seperator}"
         return ret[:-1]
 
-    def get_libs(self, directory, seperator=" "):
+    def GetLibs(self, directory, seperator=" "):
         ret = ""
         for file in os.listdir(directory):
             if not os.path.isfile(os.path.join(directory, file)):
@@ -68,48 +85,51 @@ class cpp(Builder):
 
     def GenCMake(self):
         # Write our cmake file
-        cmake_open = f'''
-cmake_minimum_required (VERSION 3.1.1)
-set (CMAKE_CXX_STANDARD 11)
+        cmake_file = open("CMakeLists.txt", "w")
+
+        cmake_file.write(f'''
+cmake_minimum_required (VERSION {self.cmake_version})
+set (CMAKE_CXX_STANDARD {self.cpp_version})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY {self.packagePath})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY {self.packagePath})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY {self.packagePath})
-include_directories({self.incPath})
-'''
+''')
 
-        cmake_file = open("CMakeLists.txt", "w")
-        cmake_file.write(f"{cmake_open}\n")
-        cmake_file.write(f"project ({self.projectName})\n")
+        cmake_file.write(f"project ({self.packageName})\n")
+
+        if (self.incPath is not None):
+            cmake_file.write(f"include_directories({self.incPath})\n")
 
         if (self.projectType in ["bin", "test"]):
             logging.info("Addind binary specific code")
 
-            cmake_file.write(f"add_executable ({self.projectName} {self.get_cxx_files(self.srcPath)})\n")
-            cmake_file.write(f'''
-include_directories({self.libPath})
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-''')
-            cmake_file.write(f"target_link_directories({self.projectName} " + f"PUBLIC {self.libPath}))\n")
-            cmake_file.write(
-                f"target_link_libraries({self.projectName} Threads::Threads {self.get_libs(self.libPath)})")
+            cmake_file.write(f"add_executable ({self.packageName} {self.GetSourceFiles(self.srcPath)})\n")
 
         if (self.projectType in ["lib", "mod"]):
             logging.info("Adding library specific code")
 
             # #TODO: support windows install targets
             installSrcPath = "/usr/local/lib"
-            installIncPath = "/usr/local/include/{self.projectName}"
+            installIncPath = "/usr/local/include/{self.packageName}"
 
-            cmake_file.write(f"add_library ({self.projectName} SHARED {self.get_cxx_files(self.srcPath)})\n")
+            cmake_file.write(f"add_library ({self.packageName} SHARED {self.GetSourceFiles(self.srcPath)})\n")
             cmake_file.write(
-                f"set_target_properties({self.projectName} PROPERTIES PUBLIC_HEADER \"{self.get_cxx_files(self.incPath, ';')}\")\n")
+                f"set_target_properties({self.packageName} PROPERTIES PUBLIC_HEADER \"{self.GetSourceFiles(self.incPath, ';')}\")\n")
             cmake_file.write(
-                f"INSTALL(TARGETS {self.projectName} LIBRARY DESTINATION {installSrcPath} PUBLIC_HEADER DESTINATION {installIncPath})\n")
+                f"INSTALL(TARGETS {self.packageName} LIBRARY DESTINATION {installSrcPath} PUBLIC_HEADER DESTINATION {installIncPath})\n")
 
-        cmake_close = '''
-'''
-        cmake_file.write(f"{cmake_close}")
+        cmake_file.write(f'''
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(Threads::Threads)
+''')
+        if (self.libPath is not None):
+            cmake_file.write(f"include_directories({self.libPath})\n")
+            cmake_file.write(f"target_link_directories({self.packageName} PUBLIC {self.libPath}))\n")
+            cmake_file.write(f"target_link_libraries({self.packageName} {self.GetLibs(self.libPath)})\n")
+
+        if ("libs_shared" in self.config):
+            cmake_file.write(f"target_link_libraries({self.packageName} {' '.join(self.config['libs_shared'])})\n")
 
         cmake_file.close()
 
