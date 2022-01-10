@@ -30,6 +30,12 @@ class Builder(e.UserFunctor):
     def Build(self):
         raise NotImplementedError
 
+    # RETURN whether or not the build was successful.
+    # Override this to perform whatever success checks are necessary.
+    # This will be called before running the next build step.
+    def DidBuildSucceed(self):
+        return True
+
     # Sets the build path that should be used by children of *this.
     # Also sets src, inc, lib, and dep paths, if they are present.
     def PopulatePaths(self, buildPath):
@@ -115,6 +121,7 @@ class Builder(e.UserFunctor):
     # Uses the Executor passed to *this.
     def BuildNext(self, **kwargs):
         if ("ebbs_next" not in self.config):
+            logging.info("Build process complete!")
             return
 
         for nxt in self.config["ebbs_next"]:
@@ -140,7 +147,10 @@ class Builder(e.UserFunctor):
         logging.info(f"Using {self.name} to build {self.projectName}, a {self.projectType}")
         self.Build()
         self.PostBuild(**kwargs)
-        self.BuildNext(**kwargs)
+        if (self.DidBuildSucceed()):
+            self.BuildNext(**kwargs)
+        else:
+            logging.error("Build did not succeed.")
 
     # RETURNS: an opened file object for writing.
     # Creates the path if it does not exist.
