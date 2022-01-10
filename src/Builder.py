@@ -80,8 +80,11 @@ class Builder(e.UserFunctor):
         if (len(details) > 1):
             self.projectName = '_'.join(details[1:])
         self.repo = kwargs.pop("repo")
-        config_file = open(os.path.join(self.rootPath, "config.json"), "r")
-        self.config = jsonpickle.decode(config_file.read())
+        configPath = os.path.join(self.rootPath, "config.json")
+        self.config = None
+        if (os.path.isfile(configPath)):
+            configFile = open(configPath, "r")
+            self.config = jsonpickle.decode(configFile.read())
         return kwargs
 
     # Hook for any pre-build configuration
@@ -120,7 +123,7 @@ class Builder(e.UserFunctor):
     # Runs the next Builder.
     # Uses the Executor passed to *this.
     def BuildNext(self, **kwargs):
-        if ("ebbs_next" not in self.config):
+        if (not self.config or "ebbs_next" not in self.config):
             logging.info("Build process complete!")
             return
 
