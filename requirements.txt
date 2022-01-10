@@ -1,1 +1,5 @@
-eons ~= 1.2.7
+eons~=1.2.7
+jsonpickle~=2.0.0
+pip~=21.1.2
+wheel~=0.36.2
+setuptools~=57.0.0
