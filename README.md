@@ -9,7 +9,7 @@ This project derives from [eons](https://github.com/eons-dev/lib_eons) for easy 
 
 ## Usage
 
-ebbs assumes that your project is named in accordance with [eons naming conventions](https://eons.dev/convention/naming/) as well as [eons directory conventions](https://eons.dev/convention/uri-names/)
+ebbs assumes that your project is named in accordance with [eons naming conventions](https://eons.llc/convention/naming/) as well as [eons directory conventions](https://eons.llc/convention/uri-names/)
 
 This usually means your project has the name of `bin_my-project`, `lib_my-project`, `test_my-project`, etc.
 
@@ -21,7 +21,7 @@ Use `ebbs --help` for help ;)
 
 **IMPORTANT NOTE: Most ebbs Builders will DELETE the directory you pass to them.**
 
-This is done so that previous builds cannot create stale data that influences future builds. However, if you mess up and call, say, `ebbs -l cpp ./src` instead of `ebbs -l cpp ./build`, you will lose your "src" folder. Please use this tool responsibly and read up on what each Builder does.
+This is done so that previous builds cannot create stale data which influence future builds. However, if you mess up and call, say, `ebbs -l cpp ./src` instead of `ebbs -l cpp ./build`, you will lose your "src" folder. Please use this tool responsibly and read up on what each Builder does.
 To make things easy, you can search for `clearBuildPath`. If you see `self.clearBuildPath = False` it should be okay to use that Builder with any directory (such is the case for the Publish Builder, which zips & uploads the contents of any directory).
 
 ### Where Are These "Languages"?
@@ -41,13 +41,21 @@ Unfortunately, python class names cannot have dashes ("-") in them. Instead, a s
 
 ### Side Note on Build Path and Languages
 
-The workspace is dependent on where ebbs is invoked. The rootPath & Builder variables are dependent on the directory above the specified buildPath. While this does prevent you from using "/my/build/path/", it does allow you to create a single workspace for all your projects.
+The workspace is dependent on where ebbs is invoked. The rootPath & Builder variables are dependent on the directory above the specified buildPath. While this prevents you from using "/my/build/path/", it does allow you to create a single workspace for all your projects.
 
 For example, if you have a "git" and a "workspace" folder in your home directory and you want to use your custom Builder, "my_language" on all the projects in the git folder, instead of copying my_language to every project's workspace, you could simply cd to /home/workspace and call ebbs with the appropriate build directory.
 Something like: `me@mine:~/workspace$ ebbs -l my_language ~/git/bin_my-cpp-project/build/; ebbs -l my_language ~/git/lib_my-python-library/generated/`.
 While that should work, this is easier but hasn't been tested:`me@mine:~/workspace$ ebbs -l my_language ~/git/**/generated/`
+
+Something like:
 ```
-TODO: ascii directory structure.
+home/
+├─ git/
+│  ├─ bin_my-cpp-project/
+│  ├─ lib_my-python-library/
+├─ workspace/
+│  ├─ language/
+│  │  ├─ my_language.py
 ```
 
 ### Repository
@@ -113,14 +121,14 @@ Here's an example config.json that builds a C++ project then pushes it to Docker
   ]
 }
 ```
-This script can be invoked with just `ebbs -l cpp ./build` (assuming the appropriate docker credentials are store in you environment).
+This script can be invoked with just `ebbs -l cpp ./build` (assuming the appropriate docker credentials are stored in your environment).
 
 ## Design
 
 ### Where Variables Come From and the config.json
 
-EBBS is intended to keep your build process separate from your code. With that said, it can be useful to specify some project-wide settings and build configurations.
-In order to accommodate more complex builds, ebbs supports the use of a config.json file in the root directory of your project (where you run ebbs from).
+Ebbs is intended to keep your build process separate from your code. With that said, it can be useful to specify some project-wide settings and build configurations.
+In order to accommodate more complex builds, ebbs supports the use of a config.json file in the root directory of your project (one directory above the buildPath you provide).
 
 Each Builder will record which arguments it needs and wants in order to function. Those arguments are then populated from:
 1. The system environment
@@ -131,7 +139,7 @@ Where, the command line overrides anything specified in the environment and conf
 
 ### I Want One!
 
-Ebbs builds packages or whatever with `Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" (see above) that can then be shared with colleagues, etc. For example, you could create "my_language.py", containing something like:
+Ebbs builds packages or whatever with `ebbs.Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" (see above) which can then be shared with colleagues, etc. For example, you could create "my_language.py", containing something like:
 ```python
 import logging
 from ebbs import Builder
@@ -152,8 +160,14 @@ class my_language(Builder):
         #self.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods) iff they are not found in the system environment, config.json, nor command line.
         self.requiredKWArgs.append("my_required_arg")
         
+        #self.my_optional_arg will be "some default value" unless the user overrides it from the command line or config.json file.
         self.optionalKWArgs["my_optional_arg"] = "some default value"
         
+    #Check if the output of all your self.RunCommand() and whatever other calls did what you expected.
+    #The "ebbs_next" step will only be executed if this step succeeded.
+    def DidBuildSucceed(self):
+        return True; #yeah, why not?
+
     def PreBuild(self):
         logging.info(f"Got {self.my_required_arg} and {self.my_optional_arg}")
         
@@ -193,8 +207,9 @@ Here, the config.json file will be automatically read in, removing the need to s
 Regarding `self.clearBuildPath`, as mentioned above, it is important to not call ebbs on the wrong directory. If your Builder does not need a fresh build path, set `self.clearBuildPath = False`.
 With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so ebbs will clear the `buildPath` for you by default. 
 
+You may also have noticed the combination of camelCase and snake_case. This is used to specify buildInValues from user_provided_values. This convention may change with a future release (let us know what you think!).
 
-For `supportedProjectTypes`, the `Builder` class will split the folder containing the buildPath (i.e. the `rootPath`, from where ebbs is invoked) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used language's `supportedProjectTypes`. If no match is found, the build is aborted prior to executing the language. If you would like your Builder to work with all project types (and thus ignore that whole naming nonsense), set `self.supportedProjectTypes = []`, where none (i.e. `[]`, not actually `None`) means "all".
+For `supportedProjectTypes`, the `Builder` class will split the folder containing the buildPath (i.e. the `rootPath`) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used language's `supportedProjectTypes`. If no match is found, the build is aborted prior to executing the language. If you would like your Builder to work with all project types (and thus ignore that whole naming nonsense), set `self.supportedProjectTypes = []`, where none (i.e. `[]`, not actually `None`) means "all".
 
 
 You'll also get the following paths variables populated by default:
@@ -224,6 +239,7 @@ self.PreBuild(**kwargs) # <- virtual (ok to override)
 #Supported project types are checked here
 self.Build() # <- abstract method for you  (MUST override)
 self.PostBuild(**kwargs) # <- virtual (ok to override)
+if (self.DidBuildSucceed()):
+    self.BuildNext()
 self.PostCall(**kwargs) # <- virtual (ok to override)
-self.
 ```
