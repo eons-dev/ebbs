@@ -22,13 +22,14 @@ class EBBS(e.Executor):
         super().AddArgs()
         self.argparser.add_argument('dir', type = str, metavar = '/project/build', help = 'path to build folder', default = '.')
         self.argparser.add_argument('-l','--language', type = str, metavar = 'cpp', help = 'language of files to build', dest = 'lang')
+        self.argparser.add_argument('-e','--environment', type = str, metavar = 'eons/img_webserver', help = 'a dockerfile to run the build in (will mount the directory above the given dir).', dest = 'env')
 
     #Override of eons.Executor method. See that class for details
     def ParseArgs(self):
         super().ParseArgs()
 
         if (not self.args.lang):
-            self.ExitDueToErr("You must specify a language.")
+            logging.debug("No language specified. Assuming build pipeline is written in config.json.")
 
     #Override of eons.Executor method. See that class for details
     def UserFunction(self, **kwargs):
@@ -36,20 +37,14 @@ class EBBS(e.Executor):
         self.Build()
 
     #Run a build script.
-    def Execute(self, language, dir, repoData, **kwargs):
-        builder = self.GetRegistered(language, "build")
-        builder(executor=self, dir=dir, repo=repoData, **kwargs)
+    def Execute(self, language, dir, **kwargs):
+        if (not language):
+            builder = Builder("EMPTY")
+        else:
+            builder = self.GetRegistered(language, "build")
+        builder(executor=self, dir=dir, **kwargs)
 
     #Build things!
     def Build(self):
-        repoData = {}
-        if (self.args.repo_store and self.args.repo_url and self.args.repo_username and self.args.repo_password):
-            repoData = {
-                'store': self.args.repo_store,
-                'url': self.args.repo_url,
-                'username': self.args.repo_username,
-                'password': self.args.repo_password
-            }
-
-        self.Execute(self.args.lang, self.args.dir, repoData, **self.extraArgs)
+        self.Execute(self.args.lang, self.args.dir, **self.extraArgs)
 
