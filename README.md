@@ -13,83 +13,135 @@ ebbs assumes that your project is named in accordance with [eons naming conventi
 
 This usually means your project has the name of `bin_my-project`, `lib_my-project`, `test_my-project`, etc.
 
-You must invoke this tool from the root directory of your project. For `{project-type}_{project-name}/build/path`, you would use `ebbs -l {language} build/path`, which would tell ebbs to build `{project-name}` as a `{project-type}` with the `{language}` builder.
+You must invoke this tool from the root directory of your project (or wherever your code is). For `{project-type}_{project-name}/build`, you would use `ebbs -l {language} build`, which would tell ebbs to build `{project-name}` as a `{project-type}` with the `{language}` builder in the `{build}` folder. At this time only 1 directory level is supported for the buildPath (i.e. "/my/build/path/" is probably invalid, but it depends on the language being used); for now, stick to something safe, like "./build/" or "./generated/". NOTE: The directory you choose does not have to exist: ebbs will make it for you.
+
+Using `-l {language}` executes a Builder (`ebbs.Builder`). The term "language" and "Builder" are often interchangeable; however, "Builder" is preferred, since it is the name of the class. 
 
 Use `ebbs --help` for help ;)
 
-Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming schemes you would like instead!
+**IMPORTANT NOTE: Most ebbs Builders will DELETE the directory you pass to them.**
+
+This is done so that previous builds cannot create stale data that influences future builds. However, if you mess up and call, say, `ebbs -l cpp ./src` instead of `ebbs -l cpp ./build`, you will lose your "src" folder. Please use this tool responsibly and read up on what each Builder does.
+To make things easy, you can search for `clearBuildPath`. If you see `self.clearBuildPath = False` it should be okay to use that Builder with any directory (such is the case for the Publish Builder, which zips & uploads the contents of any directory).
+
+### Where Are These "Languages"?
+
+All languages are searched for in the local file system within the following folders:
+NOTE: Collectively, these folders, within your project folder, are called the "workspace"
+```python
+self.RegisterDirectory("language")
+self.RegisterDirectory("inc/language")
+self.RegisterDirectory("ebbs/inc/language")
+#and 
+"eons" #per the eons.Executor.defaultRepoDirectory
+```
+If the language you specified is not found within one of those directories, ebbs will try to download it from the remote repository with a name of `build_{language}`. The downloaded build script will be saved to whatever directory you set in `--repo-store` (default "./eons/").
+
+Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores ("_") is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming scheme you would like instead!
+
+### Side Note on Build Path and Languages
+
+The workspace is dependent on where ebbs is invoked. The rootPath & Builder variables are dependent on the directory above the specified buildPath. While this does prevent you from using "/my/build/path/", it does allow you to create a single workspace for all your projects.
+
+For example, if you have a "git" and a "workspace" folder in your home directory and you want to use your custom Builder, "my_language" on all the projects in the git folder, instead of copying my_language to every project's workspace, you could simply cd to /home/workspace and call ebbs with the appropriate build directory.
+Something like: `me@mine:~/workspace$ ebbs -l my_language ~/git/bin_my-cpp-project/build/; ebbs -l my_language ~/git/lib_my-python-library/generated/`.
+While that should work, this is easier but hasn't been tested:`me@mine:~/workspace$ ebbs -l my_language ~/git/**/generated/`
+```
+TODO: ascii directory structure.
+```
 
 ### Repository
 
-Online repository credentials can be specified with:
+Online repository settings can be specified with:
 ```
---repo-store
---repo-url
+--repo-store (default = ./eons/)
+--repo-url (default = https://api.infrastructure.tech/v1/package)
 --repo-username
 --repo-password
 ```
 
-These credentials, when used, are passed to the language Builder. This is done primarily for publishing. Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
+NOTE: you do not need to supply any repo settings to download packages from the public repository.
+Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
 
-Publishing requires the following additional arguments:
+For more info on the repo integration, see [the eons library](https://github.com/eons-dev/lib_eons#online-repository)
+
+By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure) for more info.
+
+**IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
+For example, if you want to use `-l my_language` from the repository, ebbs will attempt to download "build_my_language". The package zip is then downloaded, extracted, registered, and instantiated.  
+All packages are .zip files.
+
+### Example Build Scripts:
+
+* [Publish](https://github.com/eons-dev/build_publish) <- this one makes other Builders available online.
+* [Python](https://github.com/eons-dev/build_py)
+* [C++](https://github.com/eons-dev/build_cpp)
+* [Docker](https://github.com/eons-dev/build_docker)
+
+### Cascading Builds
+
+As with any good build system, you aren't limited to just one step. With ebbs, you can specify "ebbs_next" in your config.json (see below), which will execute a series of Builders after the initial.
+
+Here's an example config.json that builds a C++ project then pushes it to Dockerhub (taken from the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure)):
+```json
+{
+  "name" : "entrypoint",
+  "cpp_version" : 17,
+  "libs_shared": [
+    "restbed",
+    "cpr"
+  ],
+  "ebbs_next": [
+    {
+      "language": "docker",
+      "type" : "srv",
+      "name" : "infrastructure",
+      "buildPath" : "tmp",
+      "copy" : [
+        {"out/" : "src/"}
+      ],
+      "config" : {
+        "name" : "eons/srv_infrastructure",
+        "from" : "eons/img_webserver",
+        "os" : "debian",
+        "entrypoint" : "/usr/local/bin/entrypoint",
+        "also" : [
+          "EXPOSE 80"
+        ]
+      }
+    }
+  ]
+}
 ```
---version
-```
-and, optionally:
-```
---visibility
-```
-More information below on repository usage and publishing.
-
-### C++
-
-Instead of writing and managing cmake files throughout your directory tree, you can use `ebbs -l cpp` from a `build` folder and all .h and .cpp files in your source tree will be discovered and added to a CMakeLists.txt, which is then built with cmake and make, so you get the compiled product you want.
-
-Supported project types:
-* lib
-* bin
-* test (alias for bin)
-
-Prerequisites:
-* cmake >= 3.1.1
-* make >= whatever
-* g++ or equivalent
-
-Currently lacking support for auto-discovered tool chains and build targets - only compiles for the system it is run on.
-
-### Python
-
-Do you hate having empty `__init__.py` files and other nonsense strewn about your project? This fixes that. Somehow.  
-To build a python library or binary, go to the root of your project and run `ebbs -l py generated`.  
-This will copy all `*.py` files out of `src` and compile them into a single `PROJECT_NAME.py` in a dependency-aware fashion.  
-It will also copy all files and directories from `inc` and add them to the build folder.  
-Then, it creates python project files, like `__main__.py` and `__init__.py`s.  
-Lastly, it invokes python's build package and pip to build and install your code. This will fail if the necessary dependencies are not installed.
-
-IMPORTANT: DO NOT USE THIS IN A `build` FOLDER!  
-Building packages from a folder named "build" with `python -m build` (and setuptools?) will result in an empty package as all `*.py` files in that directory are ignored.
-Someone please fix this...
-
-Supported project types:
-* bin
-* lib
-
-Prerequisites:
-* `build` python package
-* valid setup and pyproject.toml files  
-
-See [how to package python projects](https://packaging.python.org/tutorials/packaging-projects/) for information on required files.  
-NOTE: Setup files are not created for you, since there is some variability in what you might want.
+This script can be invoked with just `ebbs -l cpp ./build` (assuming the appropriate docker credentials are store in you environment).
 
 ## Design
 
-Ebbs builds packages or whatever with `Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" that can then be shared with colleagues, etc. For example, you could create "my_language.py", containing something like:
+### Where Variables Come From and the config.json
+
+EBBS is intended to keep your build process separate from your code. With that said, it can be useful to specify some project-wide settings and build configurations.
+In order to accommodate more complex builds, ebbs supports the use of a config.json file in the root directory of your project (where you run ebbs from).
+
+Each Builder will record which arguments it needs and wants in order to function. Those arguments are then populated from:
+1. The system environment
+2. The config.json
+3. The command line
+
+Where, the command line overrides anything specified in the environment and config file.
+
+### I Want One!
+
+Ebbs builds packages or whatever with `Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" (see above) that can then be shared with colleagues, etc. For example, you could create "my_language.py", containing something like:
 ```python
+import logging
 from ebbs import Builder
 
 class my_language(Builder):
     def __init__(self, name="My Language"):
         super().__init__(name)
+        
+        # delete whatever dir was provided to this, so we can start fresh.
+        self.clearBuildPath = True
         
         self.supportedProjectTypes = [] #all
         #or
@@ -97,31 +149,63 @@ class my_language(Builder):
         # self.supportedProjectTypes.append("bin")
         # self.supportedProjectTypes.append("test")
         
-        #-- is used for consistency and highly recommended.
-        #self.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods)
-        self.requiredKWArgs.append("--my-cli-option")
+        #self.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods) iff they are not found in the system environment, config.json, nor command line.
+        self.requiredKWArgs.append("my_required_arg")
         
-    #Use --my-cli-option
-    def PreBuild(self, **kwargs):
-        self.my_option = kwargs.get("--my-cli-option")
+        self.optionalKWArgs["my_optional_arg"] = "some default value"
+        
+    def PreBuild(self):
+        logging.info(f"Got {self.my_required_arg} and {self.my_optional_arg}")
         
     #Required Builder method. See that class for details.
     def Build(self):
         #DO STUFF!
 ```
-That file can then go in a "./ebbs/inc/language" directory, perhaps within your project repository.  
-ebbs can then be invoked with something like: `ebbs -l my_language ./generated --my-cli-option my-value`, which will run your Build method from "./generated".
+That file can then go in a "./ebbs/inc/language" directory, perhaps within your project repository or on infrastructure.tech!
+ebbs can then be invoked with something like: `ebbs -l my_language ./build --my_required_arg my-value`, which will run your Build method from "./build" (NOTE: "build" does not work with the "py" Builder, use "generated" or literally anything else instead).
 
-The `Builder` class will split the folder containing the buildPath (e.g. "./generated) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used language's `supportedProjectTypes`. If no match if found, the build is aborted prior to executing the language.
+Also note the "--" preceding "--my_required_arg", which evaluates to just "my_required_arg" (without the "--") once in the Builder. This is done for convenience of both command line syntax and python code.
 
-`Builder` also provides the following path variables by default:
+You could also do something like:
+```shell
+cat << EOF > ./config.json
+{
+  "my_required_arg" : "my-value",
+  "my_optional_arg" : [
+    "some",
+    "other",
+    "value",
+    "that",
+    "you",
+    "don't",
+    "want",
+    "to",
+    "type"
+  ]
+}
+EOF
+
+ebbs -l my_language ./build
+```
+Here, the config.json file will be automatically read in, removing the need to specify the args for your language.
+
+
+Regarding `self.clearBuildPath`, as mentioned above, it is important to not call ebbs on the wrong directory. If your Builder does not need a fresh build path, set `self.clearBuildPath = False`.
+With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so ebbs will clear the `buildPath` for you by default. 
+
+
+For `supportedProjectTypes`, the `Builder` class will split the folder containing the buildPath (i.e. the `rootPath`, from where ebbs is invoked) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used language's `supportedProjectTypes`. If no match is found, the build is aborted prior to executing the language. If you would like your Builder to work with all project types (and thus ignore that whole naming nonsense), set `self.supportedProjectTypes = []`, where none (i.e. `[]`, not actually `None`) means "all".
+
+
+You'll also get the following paths variables populated by default:
+(NOTE: the way this is done is why more than 1 level for buildPath is currently unsupported)
 ```python
-        self.buildPath = path #The one specified on the cli
-        self.rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
-        self.srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
-        self.incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
-        self.depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
-        self.libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
+self.buildPath = path #The one specified on the cli
+self.rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
+self.srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
+self.incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
+self.depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
+self.libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
 ```
 As well as the following methods:  
 (See Builder.py for more details)
@@ -134,29 +218,12 @@ When a `Builder` is executed, the following are called in order:
 (kwargs is the same for all)
 ```python
 self.ValidateArgs(**kwargs) # <- not recommended to override.
-self.PreCall(**kwargs) # <- virtual
+self.PreCall(**kwargs) # <- virtual (ok to override)
 #Builder sets the above mentioned variables here
-self.PreBuild(**kwargs) # <- virtual
+self.PreBuild(**kwargs) # <- virtual (ok to override)
 #Supported project types are checked here
-self.Build() # <- abstract method for you 
-self.PostBuild(**kwargs) # <- virtual
-self.PostCall(**kwargs) # <- virtual
+self.Build() # <- abstract method for you  (MUST override)
+self.PostBuild(**kwargs) # <- virtual (ok to override)
+self.PostCall(**kwargs) # <- virtual (ok to override)
+self.
 ```
-
-## Supported Languages
-
-Out of the box, you can build:
-* C++
-* Python (yes, this repository is circularly dependent on itself. That's how you know it's stable!)
-
-You can also "publish" packages to an online repository with `-l publish`. This is just another `Builder` and can be extended or substituted as with any other "language".  
-When publishing your code, you can use `--visibility 'private'` or `--visibility 'publish'`. Anything other than `private` or `publish` will fail, unless you build your own repository api. 
-
-Ebbs will try to download a language package if the one specified is not found in your workspace.
-You may add credentials and even provide your own repo url for searching. If credentials are supplied, private packages will be searched before public ones. The same credentials (or those with write access) are required for publishing.
-
-By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure API docs](https://github.com/infrastructure-tech/api) for more info.
-
-**IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
-For example, if you want to use `-l my_language` from the repository, ebbs will attempt to download "build_my_language". The package zip is then downloaded, extracted, registered, and instantiated.  
-All packages are .zip files.

@@ -36,11 +36,11 @@ class Builder(e.UserFunctor):
         return True
 
     # Hook for any pre-build configuration
-    def PreBuild(self, **kwargs):
+    def PreBuild(self):
         pass
 
     # Hook for any post-build configuration
-    def PostBuild(self, **kwargs):
+    def PostBuild(self):
         pass
 
     # Sets the build path that should be used by children of *this.
