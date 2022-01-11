@@ -13,8 +13,6 @@ class Builder(e.UserFunctor):
     def __init__(self, name=e.INVALID_NAME()):
         super().__init__(name)
 
-        self.requiredKWArgs.append("dir")
-
         #For optional args, supply the arg name as well as a default value.
         self.optionalKWArgs = {}
 
@@ -49,6 +47,9 @@ class Builder(e.UserFunctor):
     # Also sets src, inc, lib, and dep paths, if they are present.
     def PopulatePaths(self, buildPath):
         self.buildPath = buildPath
+        if (self.buildPath is None):
+            logging.warn("no \"dir\" supplied. buildPath is None")
+            return
 
         rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
         if (os.path.isdir(rootPath)):
@@ -91,7 +92,6 @@ class Builder(e.UserFunctor):
         self.projectType = details[0]
         if (len(details) > 1):
             self.projectName = '_'.join(details[1:])
-        self.repo = kwargs.pop("repo")
         configPath = os.path.join(self.rootPath, "config.json")
         self.config = None
         if (os.path.isfile(configPath)):
@@ -137,6 +137,8 @@ class Builder(e.UserFunctor):
 
     #Override of eons.UserFunctor method. See that class for details.
     def ValidateArgs(self, **kwargs):
+        logging.debug(f"Got arguments: {kwargs}")
+
         self.PopulateProjectDetails(**kwargs)
 
         for rkw in self.requiredKWArgs:
@@ -150,7 +152,7 @@ class Builder(e.UserFunctor):
                 # Nope. Failed.
                 errStr = f"{rkw} required but not found."
                 logging.error(errStr)
-                raise MissingArgumentError(errStr)
+                raise BuildError(errStr)
 
         for okw, default in self.optionalKWArgs.items():
             if (hasattr(self, okw)):
