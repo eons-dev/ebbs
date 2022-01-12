@@ -21,7 +21,7 @@ class Builder(e.UserFunctor):
         self.projectType = "bin"
         self.projectName = e.INVALID_NAME()
 
-        self.clearBuildPath = True
+        self.clearBuildPath = False
 
     # Build things!
     # Override this or die.
