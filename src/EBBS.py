@@ -20,7 +20,7 @@ class EBBS(e.Executor):
     #Override of eons.Executor method. See that class for details
     def AddArgs(self):
         super().AddArgs()
-        self.argparser.add_argument('dir', type = str, metavar = '/project/build', help = 'path to build folder', default = '.')
+        self.argparser.add_argument('dir', type = str, nargs='?', metavar = '/project/build', help = 'path to build folder', default = '.')
         self.argparser.add_argument('-l','--language', type = str, metavar = 'cpp', help = 'language of files to build', dest = 'lang')
         self.argparser.add_argument('-e','--environment', type = str, metavar = 'eons/img_webserver', help = 'a dockerfile to run the build in (will mount the directory above the given dir).', dest = 'env')
 

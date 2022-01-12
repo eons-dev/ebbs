@@ -205,7 +205,7 @@ Here, the config.json file will be automatically read in, removing the need to s
 
 
 Regarding `self.clearBuildPath`, as mentioned above, it is important to not call ebbs on the wrong directory. If your Builder does not need a fresh build path, set `self.clearBuildPath = False`.
-With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so ebbs will clear the `buildPath` for you by default. 
+With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so make sure to set `self.clearBuildPath = True` if you need to.
 
 You may also have noticed the combination of camelCase and snake_case. This is used to specify buildInValues from user_provided_values. This convention may change with a future release (let us know what you think!).
 
