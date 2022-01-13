@@ -30,7 +30,7 @@ class EBBS(e.Executor):
 
         self.events = set()
         if (self.args.events is not None):
-            [[self.events.add(e) for e in l] for l in self.args.events]
+            [[self.events.add(str(e)) for e in l] for l in self.args.events]
 
         if (not self.args.builder):
             logging.debug("No build specified. Assuming build pipeline is written in build.json.")
