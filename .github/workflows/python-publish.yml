@@ -1,5 +1,5 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+# Uses ebbs to build and publish a python package.
+# pypi_username and pypi_password are necessary environment variables to enable publishing.
 
 name: Upload Python Package
 
@@ -26,12 +26,10 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine build ebbs
+        pip install ebbs
     - name: Build and publish
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        pypi_username: ${{ secrets.PYPI_USERNAME }}
+        pypi_password: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        ebbs -l py generated
-        twine upload dist/*
+        ebbs -v . --version ${{ github.event.release.tag_name }}
