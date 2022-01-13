@@ -229,7 +229,7 @@ class Builder(e.UserFunctor):
             if (hasattr(self, rkw)):
                 continue
 
-            fetched = self.FetchVar(okw)
+            fetched = self.FetchVar(rkw)
             if (fetched is not None):
                 self.SetVar(fetched)
                 continue
