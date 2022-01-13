@@ -231,7 +231,7 @@ class Builder(e.UserFunctor):
 
             fetched = self.FetchVar(rkw)
             if (fetched is not None):
-                self.SetVar(fetched)
+                self.SetVar(rkw, fetched)
                 continue
 
             # Nope. Failed.
