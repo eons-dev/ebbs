@@ -155,9 +155,9 @@ class Builder(e.UserFunctor):
     # For example "run_when":"publish" would require `--event publish` to enable publication Builders in the workflow.
     def ValidateNext(self, nextBuilder):
         if ("run_when" in nextBuilder):
-            if (not set(nextBuilder["run_when"]).issubset(self.events)):
+            if (not set([str(r) for r in nextBuilder["run_when"]]).issubset(self.events)):
                 logging.info(
-                    f"Skipping next builder: {nextBuilder['build']}; required events not met (needs {nextBuilder['run_when']} but only have {self.events}")
+                    f"Skipping next builder: {nextBuilder['build']}; required events not met (needs {nextBuilder['run_when']} but only have {self.events})")
                 return False
         return True
 
