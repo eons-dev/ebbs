@@ -21,3 +21,4 @@ jobs:
     - name: Build
       run: |
         ebbs -v . --repo-username "${{ secrets.INFRASTRUCTURE_USERNAME }}" --repo-password "${{ secrets.INFRASTRUCTURE_PASSWORD }}" --event "pull_request"
+        ebbs -v . --repo-username "${{ secrets.INFRASTRUCTURE_USERNAME }}" --repo-password "${{ secrets.INFRASTRUCTURE_PASSWORD }}" --event "pull_request"
