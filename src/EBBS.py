@@ -5,46 +5,46 @@ from .Exceptions import *
 
 class EBBS(e.Executor):
 
-    def __init__(self):
+    def __init__(this):
         super().__init__(name="eons Basic Build System", descriptionStr="A hackable build system for all builds!")
 
-        self.RegisterDirectory("ebbs")
+        this.RegisterDirectory("ebbs")
 
     #Override of eons.Executor method. See that class for details
-    def RegisterAllClasses(self):
+    def RegisterAllClasses(this):
         super().RegisterAllClasses()
-        self.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
+        this.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
 
     #Override of eons.Executor method. See that class for details
-    def AddArgs(self):
+    def AddArgs(this):
         super().AddArgs()
-        self.argparser.add_argument('path', type = str, nargs='?', metavar = '/project/', help = 'path to project folder', default = '.')
-        self.argparser.add_argument('-i', '--build-in', type = str, metavar = 'build', help = 'name of folder to use inside project (/project/build/)', default = 'build', dest = 'build_in')
-        self.argparser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'build of files to build', dest = 'builder')
-        self.argparser.add_argument('-e','--event', type = str, action='append', nargs='*', metavar = 'release', help = 'what is going on that triggered this build?', dest = 'events')
+        this.argparser.add_argument('path', type = str, nargs='?', metavar = '/project/', help = 'path to project folder', default = '.')
+        this.argparser.add_argument('-i', '--build-in', type = str, metavar = 'build', help = 'name of folder to use inside project (/project/build/)', default = 'build', dest = 'build_in')
+        this.argparser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'build of files to build', dest = 'builder')
+        this.argparser.add_argument('-e','--event', type = str, action='append', nargs='*', metavar = 'release', help = 'what is going on that triggered this build?', dest = 'events')
 
 
     #Override of eons.Executor method. See that class for details
-    def ParseArgs(self):
+    def ParseArgs(this):
         super().ParseArgs()
 
-        self.events = set()
-        if (self.args.events is not None):
-            [[self.events.add(str(e)) for e in l] for l in self.args.events]
+        this.events = set()
+        if (this.args.events is not None):
+            [[this.events.add(str(e)) for e in l] for l in this.args.events]
 
-        if (not self.args.builder):
+        if (not this.args.builder):
             logging.debug("No build specified. Assuming build pipeline is written in build.json.")
 
     #Override of eons.Executor method. See that class for details
-    def UserFunction(self, **kwargs):
+    def UserFunction(this, **kwargs):
         super().UserFunction(**kwargs)
-        self.Execute(self.args.builder, self.args.path, self.args.build_in, self.events, **self.extraArgs)
+        this.Execute(this.args.builder, this.args.path, this.args.build_in, this.events, **this.extraArgs)
 
     #Run a build script.
-    def Execute(self, build, path, build_in, events, **kwargs):
+    def Execute(this, build, path, build_in, events, **kwargs):
         if (not build):
             builder = Builder("EMPTY")
         else:
-            builder = self.GetRegistered(build, "build")
+            builder = this.GetRegistered(build, "build")
         logging.debug(f"Executing {build} in {path}/{build_in} with events {events} and additional args: {kwargs}")
-        builder(executor=self, path=path, build_in=build_in, events=events, **kwargs)
+        builder(executor=this, path=path, build_in=build_in, events=events, **kwargs)

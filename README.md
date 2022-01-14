@@ -49,20 +49,20 @@ Lastly, you can specify a build folder (i.e. a folder to create within your proj
  2. `"build_in" : "BUILD_FOLDER"` in the build.json
 
 You can also specify any number of other arguments in any of the command line, build.json, and system environments.
-For example, `export pypi_username="__token__"` would make `self.pypi_username` in the "py" Builder return `__token__`, assuming you don't set `"pypi_username" : "something else"` in the build.json nor specify `--pypi_username "something-else"` on the command line.
+For example, `export pypi_username="__token__"` would make `this.pypi_username` in the "py" Builder return `__token__`, assuming you don't set `"pypi_username" : "something else"` in the build.json nor specify `--pypi_username "something-else"` on the command line.
 
 As always, use `ebbs --help` for help ;)
 
 **IMPORTANT NOTE: Most ebbs Builders will DELETE the build folder you pass to them.**
 
 This is done so that previous builds cannot create stale data which influence future builds. However, if you mess up and call, say, `ebbs -b cpp ./src` instead of `ebbs -b cpp ./build`, you will lose your "src" folder. Please use this tool responsibly and read up on what each Builder does.
-To make things easy, you can search for `clearBuildPath`. If you see `self.clearBuildPath = False` it should be okay to use that Builder with any directory (such is the case for the Publish Builder, which zips the contents of any directory and uploads them to an online repository).
+To make things easy, you can search for `clearBuildPath`. If you see `this.clearBuildPath = False` it should be okay to use that Builder with any directory (such is the case for the Publish Builder, which zips the contents of any directory and uploads them to an online repository).
 
 ### Where Are These "Builders"?
 
 All Builders are searched for in the local file system from where ebbs was called within the following folders:
 ```python
-self.RegisterDirectory("ebbs")
+this.RegisterDirectory("ebbs")
 #and 
 "eons" #per the eons.Executor.defaultRepoDirectory
 ```
@@ -198,40 +198,40 @@ Where, the command line overrides anything specified in the environment and conf
 
 ### I Want One!
 
-Ebbs builds packages or whatever with `ebbs.Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" (see above) which can then be shared with colleagues, etc. For example, you could create "my_build.py", containing something like:
+Ebbs builds packages or whatever with `ebbs.Builders`, which extend the this-registering `eons.UserFunctor`. This means you can write your own build scripts and place them in a "workspace" (see above) which can then be shared with colleagues, etc. For example, you could create "my_build.py", containing something like:
 ```python
 import logging
 from ebbs import Builder
 
 class my_build(Builder):
-    def __init__(self, name="My Build"):
+    def __init__(this, name="My Build"):
         super().__init__(name)
         
         # delete whatever dir was provided to this, so we can start fresh.
-        self.clearBuildPath = True
+        this.clearBuildPath = True
         
-        self.supportedProjectTypes = [] #all
+        this.supportedProjectTypes = [] #all
         #or
-        # self.supportedProjectTypes.append("lib")
-        # self.supportedProjectTypes.append("bin")
-        # self.supportedProjectTypes.append("test")
+        # this.supportedProjectTypes.append("lib")
+        # this.supportedProjectTypes.append("bin")
+        # this.supportedProjectTypes.append("test")
         
-        #self.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods) iff they are not found in the system environment, build.json, nor command line.
-        self.requiredKWArgs.append("my_required_arg")
+        #this.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods) iff they are not found in the system environment, build.json, nor command line.
+        this.requiredKWArgs.append("my_required_arg")
         
-        #self.my_optional_arg will be "some default value" unless the user overrides it from the command line or build.json file.
-        self.optionalKWArgs["my_optional_arg"] = "some default value"
+        #this.my_optional_arg will be "some default value" unless the user overrides it from the command line or build.json file.
+        this.optionalKWArgs["my_optional_arg"] = "some default value"
         
-    #Check if the output of all your self.RunCommand() and whatever other calls did what you expected.
+    #Check if the output of all your this.RunCommand() and whatever other calls did what you expected.
     #The "ebbs_next" step will only be executed if this step succeeded.
-    def DidBuildSucceed(self):
+    def DidBuildSucceed(this):
         return True; #yeah, why not?
 
-    def PreBuild(self):
-        logging.info(f"Got {self.my_required_arg} and {self.my_optional_arg}")
+    def PreBuild(this):
+        logging.info(f"Got {this.my_required_arg} and {this.my_optional_arg}")
         
     #Required Builder method. See that class for details.
-    def Build(self):
+    def Build(this):
         #DO STUFF!
 ```
 That file can then go in a "./ebbs/" or "./eons/" directory, perhaps within your project repository or on infrastructure.tech!
@@ -298,42 +298,42 @@ EOF
 ebbs #no args needed!
 ```
 
-Regarding `self.clearBuildPath`, as mentioned above, it is important to not call ebbs on the wrong directory. If your Builder does not need a fresh build path, set `self.clearBuildPath = False`.
-With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so make sure to set `self.clearBuildPath = True` if you need to.
+Regarding `this.clearBuildPath`, as mentioned above, it is important to not call ebbs on the wrong directory. If your Builder does not need a fresh build path, set `this.clearBuildPath = False`.
+With that said, most compilation, packaging, etc. can be broken by stale data from past builds, so make sure to set `this.clearBuildPath = True` if you need to.
 
 You may also have noticed the combination of camelCase and snake_case. This is used to specify builtInValues from user_provided_values. This convention may change with a future release (let us know what you think!).
 
-For `supportedProjectTypes`, the `Builder` class will split the folder containing the buildPath (i.e. the `rootPath`) on underscores ("_"), storing the first value as `self.projectType` and the second as `self.projectName`. The `projectType` is checked against the used build's `supportedProjectTypes`. If no match is found, the build is aborted prior to executing the build. If you would like your Builder to work with all project types (and thus ignore that whole naming nonsense), set `self.supportedProjectTypes = []`, where none (i.e. `[]`, not actually `None`) means "all".
+For `supportedProjectTypes`, the `Builder` class will split the folder containing the buildPath (i.e. the `rootPath`) on underscores ("_"), storing the first value as `this.projectType` and the second as `this.projectName`. The `projectType` is checked against the used build's `supportedProjectTypes`. If no match is found, the build is aborted prior to executing the build. If you would like your Builder to work with all project types (and thus ignore that whole naming nonsense), set `this.supportedProjectTypes = []`, where none (i.e. `[]`, not actually `None`) means "all".
 
 
 You'll also get the following paths variables populated by default:
 ```python
-self.buildPath = path #The one specified on the cli
-self.rootPath = os.path.abspath(os.path.join(self.buildPath, "../"))
-self.srcPath = os.path.abspath(os.path.join(self.buildPath, "../src"))
-self.incPath = os.path.abspath(os.path.join(self.buildPath, "../inc"))
-self.depPath = os.path.abspath(os.path.join(self.buildPath, "../dep"))
-self.libPath = os.path.abspath(os.path.join(self.buildPath, "../lib"))
-self.testPath = os.path.abspath(os.path.join(self.buildPath, "../test"))
+this.buildPath = path #The one specified on the cli
+this.rootPath = os.path.abspath(os.path.join(this.buildPath, "../"))
+this.srcPath = os.path.abspath(os.path.join(this.buildPath, "../src"))
+this.incPath = os.path.abspath(os.path.join(this.buildPath, "../inc"))
+this.depPath = os.path.abspath(os.path.join(this.buildPath, "../dep"))
+this.libPath = os.path.abspath(os.path.join(this.buildPath, "../lib"))
+this.testPath = os.path.abspath(os.path.join(this.buildPath, "../test"))
 ```
 As well as the following methods:  
 (See Builder.py for more details)
 ```python
-def CreateFile(self, file, mode="w+")
-def RunCommand(self, command)
+def CreateFile(this, file, mode="w+")
+def RunCommand(this, command)
 ```
 
 When a `Builder` is executed, the following are called in order:  
 (kwargs is the same for all)
 ```python
-self.ValidateArgs(**kwargs) # <- not recommended to override.
-self.PreCall(**kwargs) # <- virtual (ok to override)
+this.ValidateArgs(**kwargs) # <- not recommended to override.
+this.PreCall(**kwargs) # <- virtual (ok to override)
 #Builder sets the above mentioned variables here
-self.PreBuild(**kwargs) # <- virtual (ok to override)
+this.PreBuild(**kwargs) # <- virtual (ok to override)
 #Supported project types are checked here
-self.Build() # <- abstract method for you  (MUST override)
-self.PostBuild(**kwargs) # <- virtual (ok to override)
-if (self.DidBuildSucceed()):
-    self.BuildNext()
-self.PostCall(**kwargs) # <- virtual (ok to override)
+this.Build() # <- abstract method for you  (MUST override)
+this.PostBuild(**kwargs) # <- virtual (ok to override)
+if (this.DidBuildSucceed()):
+    this.BuildNext()
+this.PostCall(**kwargs) # <- virtual (ok to override)
 ```
