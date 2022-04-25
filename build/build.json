@@ -1,15 +1,17 @@
 {
+  "name" : "ebbs",
+  "type" : "bin",
   "clear_build_path" : true,
-  "ebbs_next": [
+  "build_in" : "out",
+  "next": [
     {
       "build" : "py",
-      "build_in" : "generated",
       "copy" : [
-        {"../src/" : "src/"},
-        {"../inc/" : "inc/"},
-        {"../test/" : "test/"},
-        {"../README.md" : "README.md"},
-        {"../LICENSE" : "LICENSE"}
+        {"../../src/" : "src/"},
+        {"../../inc/" : "inc/"},
+        {"../../test/" : "test/"},
+        {"../../README.md" : "README.md"},
+        {"../../LICENSE" : "LICENSE"}
       ],
       "config" : {
         "author_name" : "eons",

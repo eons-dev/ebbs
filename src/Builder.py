@@ -19,8 +19,8 @@ class Builder(e.UserFunctor):
         # What can this build, "bin", "lib", "img", ... ?
         this.supportedProjectTypes = []
 
-        this.projectType = "bin"
-        this.projectName = e.INVALID_NAME()
+        this.projectType = None
+        this.projectName = None
 
         this.clearBuildPath = False
 
@@ -30,11 +30,13 @@ class Builder(e.UserFunctor):
             "clear_build_path": "clearBuildPath"
         }
 
+
     # Build things!
     # Override this or die.
     # Empty Builders can be used with build.json to start build trees.
     def Build(this):
         pass
+
 
     # RETURN whether or not the build was successful.
     # Override this to perform whatever success checks are necessary.
@@ -42,13 +44,16 @@ class Builder(e.UserFunctor):
     def DidBuildSucceed(this):
         return True
 
+
     # Hook for any pre-build configuration
     def PreBuild(this):
         pass
 
+
     # Hook for any post-build configuration
     def PostBuild(this):
         pass
+
 
     # Sets the build path that should be used by children of *this.
     # Also sets src, inc, lib, and dep paths, if they are present.
@@ -76,6 +81,7 @@ class Builder(e.UserFunctor):
             else:
                 setattr(this, f"{path}Path", None)
 
+
     # Populate the configuration details for *this.
     def PopulateLocalConfig(this, configName="build.json"):
         this.config = None
@@ -86,6 +92,7 @@ class Builder(e.UserFunctor):
             this.config = jsonpickle.decode(configFile.read())
             configFile.close()
             logging.debug(f"Got local config contents: {this.config}")
+
 
     # Wrapper around setattr
     def Set(this, varName, value):
@@ -102,17 +109,29 @@ class Builder(e.UserFunctor):
     #    second: the local config file
     #    third: the executor (args > config > environment)
     # RETURNS the value of the given variable or None.
-    def Fetch(this, varName):
-        if (hasattr(this, varName)):
+    def Fetch(this,
+        varName,
+        default=None,
+        enableThisBuilder=True,
+        enableThisExecutor=True,
+        enableArgs=True,
+        enableLocalConfig=True,
+        enableExecutorConfig=True,
+        enableEnvironment=True):
+
+        ret = this.executor.Fetch(varName, default, enableThisExecutor, enableArgs, enableExecutorConfig, enableEnvironment)
+
+        if (enableThisBuilder and hasattr(this, varName)):
+            logging.debug("...got {varName} from self ({this.name}).")
             return getattr(this, varName)
 
-        if (this.config is not None):
+        if (enableLocalConfig and this.config is not None):
             for key, val in this.config.items():
                 if (key == varName):
                     logging.debug(f"...got {varName} from local config.")
                     return val
 
-        return this.executor.Fetch(varName)
+        return ret
 
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
@@ -121,19 +140,23 @@ class Builder(e.UserFunctor):
     # For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
     def PopulateProjectDetails(this, **kwargs):
         this.os = platform.system()
-        this.executor = kwargs.pop("executor")
+        this.executor = kwargs.pop('executor')
+        this.events = kwargs.pop('events')
 
-        this.PopulatePaths(kwargs.pop("path"), kwargs.pop("build_in"))
+        this.PopulatePaths(kwargs.pop("path"), kwargs.pop('build_in'))
         this.PopulateLocalConfig()
 
         for key, var in this.configMap.items():
-            this.Set(key, this.Fetch(key))
+            this.Set(key, this.Fetch(key, default=None, enableThisBuilder=False, enableThisExecutor=False))
 
         details = os.path.basename(this.rootPath).split("_")
-        if (not this.projectType):
+        if (this.projectType is None):
             this.projectType = details[0]
-        if (not this.projectName and len(details) > 1):
-            this.projectName = '_'.join(details[1:])
+        if (this.projectName is None):
+            if (len(details) > 1):
+                this.projectName = '_'.join(details[1:])
+            else:
+                this.projectName = e.INVALID_NAME()
 
 
     # RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
@@ -205,19 +228,35 @@ class Builder(e.UserFunctor):
     # Runs the next Builder.
     # Uses the Executor passed to *this.
     def BuildNext(this):
-        if (not hasattr(this, "ebbs_next")):
+        #When fetching what to do next, everything is valid EXCEPT the environment. Otherwise we could do something like `export next='nop'` and never quit.
+        next = this.Fetch('next',
+            default=None,
+            enableThisBuilder=True,
+            enableThisExecutor=False,
+            enableArgs=False,
+            enableLocalConfig=True,
+            enableExecutorConfig=False,
+            enableEnvironment=False)
+        if (next is None):
             logging.info("Build process complete!")
             return
 
-        for nxt in this.ebbs_next:
+        for nxt in next:
             if (not this.ValidateNext(nxt)):
                 continue
             nxtPath = this.PrepareNext(nxt)
             buildFolder = f"then_build_{nxt['build']}"
             if ("build_in" in nxt):
                 buildFolder = nxt["build_in"]
-            this.executor.Execute(build=nxt["build"], path=nxtPath, build_in=buildFolder, events=this.events,
-                                  parent=this, name=this.projectName, type=this.projectType)
+            result = this.executor.Execute(
+                build=nxt["build"],
+                path=nxtPath,
+                build_in=buildFolder,
+                events=this.events)
+            if (not result and ('tolerate_failure' not in nxt or not nxt['tolerate_failure'])):
+                logging.error(f"Building {nxt['build']} failed. Aborting.")
+                break
+
 
 
     # Override of eons.UserFunctor method. See that class for details.
@@ -244,13 +283,7 @@ class Builder(e.UserFunctor):
             if (hasattr(this, okw)):
                 continue
 
-            fetched = this.Fetch(okw)
-            if (fetched is not None):
-                this.Set(okw, fetched)
-                continue
-
-            logging.debug(f"Failed to fetch {okw}. Using default value: {default}")
-            this.Set(okw, default)
+            this.Set(okw, this.Fetch(okw, default=default))
 
 
     # Override of eons.Functor method. See that class for details
