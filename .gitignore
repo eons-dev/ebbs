@@ -128,9 +128,7 @@ dmypy.json
 .pyre/
 
 # EBBS build folder
-generated/
-ebbs/
-eons/
+build/eons/
 build/out/
 
 # Jetbrains

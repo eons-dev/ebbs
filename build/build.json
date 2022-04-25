@@ -6,7 +6,6 @@
   "next": [
     {
       "build" : "py",
-      "build_in" : "generated",
       "copy" : [
         {"../../src/" : "src/"},
         {"../../inc/" : "inc/"},
