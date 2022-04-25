@@ -121,13 +121,13 @@ All packages are .zip files.
 
 ### Cascading Builds
 
-As with any good build system, you aren't limited to just one step. With ebbs, you can specify "ebbs_next" in your build.json (see below), which will execute a series of Builders after the initial.
+As with any good build system, you aren't limited to just one step. With ebbs, you can specify "next" in your build.json (see below), which will execute a series of Builders after the initial.
 
 Here's an example build.json that builds a C++ project then pushes it to Dockerhub (taken from the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure)):
 ```json
 {
   "clear_build_path" : true,
-  "ebbs_next": [
+  "next": [
     {
       "build" : "in_container",
       "config" : {
@@ -136,7 +136,7 @@ Here's an example build.json that builds a C++ project then pushes it to Dockerh
           "docker_username",
           "docker_password"
         ],
-        "ebbs_next" : [
+        "next" : [
           {
             "build" : "cpp",
             "build_in" : "build",
@@ -151,7 +151,7 @@ Here's an example build.json that builds a C++ project then pushes it to Dockerh
                 "restbed",
                 "cpr"
               ],
-              "ebbs_next" : [
+              "next" : [
                 {
                   "build": "docker",
                   "path" : "srv_infrastructure",
@@ -221,7 +221,7 @@ class my_build(Builder):
         this.optionalKWArgs["my_optional_arg"] = "some default value"
         
     #Check if the output of all your this.RunCommand() and whatever other calls did what you expected.
-    #The "ebbs_next" step will only be executed if this step succeeded.
+    #The "next" step will only be executed if this step succeeded.
     def DidBuildSucceed(this):
         return True; #yeah, why not?
 
@@ -265,7 +265,7 @@ If you'd like to take this a step further, you can remove the need for `-b my_bu
 ```shell
 cat << EOF > ./build.json
 {
-  "ebbs_next": [
+  "next": [
     {
       "build" : "my_build",
       "build_in" : "build",

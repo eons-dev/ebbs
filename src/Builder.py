@@ -212,11 +212,11 @@ class Builder(e.UserFunctor):
     # Runs the next Builder.
     # Uses the Executor passed to *this.
     def BuildNext(this):
-        if (not hasattr(this, "ebbs_next")):
+        if (not this.config or not 'next' in this.config):
             logging.info("Build process complete!")
             return
 
-        for nxt in this.ebbs_next:
+        for nxt in this.config['next']:
             if (not this.ValidateNext(nxt)):
                 continue
             nxtPath = this.PrepareNext(nxt)
