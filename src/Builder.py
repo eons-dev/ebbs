@@ -128,9 +128,10 @@ class Builder(e.UserFunctor):
     # For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
     def PopulateProjectDetails(this, **kwargs):
         this.os = platform.system()
-        this.executor = kwargs.pop("executor")
+        this.executor = kwargs.pop('executor')
+        this.events = kwargs.pop('events')
 
-        this.PopulatePaths(kwargs.pop("path"), kwargs.pop("build_in"))
+        this.PopulatePaths(kwargs.pop("path"), kwargs.pop('build_in'))
         this.PopulateLocalConfig()
 
         for key, var in this.configMap.items():

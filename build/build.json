@@ -1,4 +1,6 @@
 {
+  "name" : "ebbs",
+  "type" : "bin",
   "clear_build_path" : true,
   "build_in" : "out",
   "next": [
