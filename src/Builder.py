@@ -19,8 +19,8 @@ class Builder(e.UserFunctor):
         # What can this build, "bin", "lib", "img", ... ?
         this.supportedProjectTypes = []
 
-        this.projectType = "bin"
-        this.projectName = e.INVALID_NAME()
+        this.projectType = None
+        this.projectName = None
 
         this.clearBuildPath = False
 
@@ -109,17 +109,20 @@ class Builder(e.UserFunctor):
     #    second: the local config file
     #    third: the executor (args > config > environment)
     # RETURNS the value of the given variable or None.
-    def Fetch(this, varName, default=None, enableEnvironment=True):
-        if (hasattr(this, varName)):
+    def Fetch(this, varName, default=None, enableSelf=True, enableArgs=True, enableConfig=True, enableEnvironment=True):
+        ret = this.executor.Fetch(varName, default, enableSelf, enableArgs, enableConfig, enableEnvironment)
+
+        if (enableSelf and hasattr(this, varName)):
+            logging.debug("...got {varName} from self ({this.name}).")
             return getattr(this, varName)
 
-        if (this.config is not None):
+        if (enableConfig and this.config is not None):
             for key, val in this.config.items():
                 if (key == varName):
                     logging.debug(f"...got {varName} from local config.")
                     return val
 
-        return this.executor.Fetch(varName, default, enableEnvironment)
+        return ret
 
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
@@ -135,13 +138,16 @@ class Builder(e.UserFunctor):
         this.PopulateLocalConfig()
 
         for key, var in this.configMap.items():
-            this.Set(key, this.Fetch(key, default=None))
+            this.Set(key, this.Fetch(key, default=None, enableSelf=False))
 
         details = os.path.basename(this.rootPath).split("_")
         if (this.projectType is None):
             this.projectType = details[0]
-        if (this.projectName is None and len(details) > 1):
-            this.projectName = '_'.join(details[1:])
+        if (this.projectName is None):
+            if (len(details) > 1)
+                this.projectName = '_'.join(details[1:])
+            else:
+                this.projectName = e.INVALID_NAME()
 
 
     # RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
