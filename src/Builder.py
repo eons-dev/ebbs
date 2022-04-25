@@ -76,8 +76,19 @@ class Builder(e.UserFunctor):
             else:
                 setattr(this, f"{path}Path", None)
 
+    # Populate the configuration details for *this.
+    def PopulateLocalConfig(this, configName="build.json"):
+        this.config = None
+        localConfigFile = os.path.join(this.rootPath, configName)
+        logging.debug(f"Looking for local configuration: {localConfigFile}")
+        if (os.path.isfile(localConfigFile)):
+            configFile = open(localConfigFile, "r")
+            this.config = jsonpickle.decode(configFile.read())
+            configFile.close()
+            logging.debug(f"Got local config contents: {this.config}")
+
     # Wrapper around setattr
-    def SetVar(this, varName, value):
+    def Set(this, varName, value):
         for key, var in this.configMap.items():
             if (varName == key):
                 varName = var
@@ -85,71 +96,45 @@ class Builder(e.UserFunctor):
         logging.debug(f"Setting {varName} = {value}")
         setattr(this, varName, value)
 
+
     # Will try to get a value for the given varName from:
     #    first: this
-    #    second: the parent
-    #    third: the environment
+    #    second: the local config file
+    #    third: the executor (args > config > environment)
     # RETURNS the value of the given variable or None.
-    def FetchVar(this, varName, prepend=""):
-        logging.debug(f"{prepend}{this.name} looking to fetch {varName}...")
-
+    def Fetch(this, varName):
         if (hasattr(this, varName)):
-            logging.debug(f"...{this.name} got {varName} from mythis!")
             return getattr(this, varName)
 
-        if (hasattr(this, "parent")):
-            parentVar = this.parent.FetchVar(varName, "...")
-            if (parentVar is not None):
-                logging.debug(f"...{this.name} got {varName} from parent ({this.parent.name})")
-                return parentVar
-
-        envVar = os.getenv(varName)
-        if (envVar is not None):
-            logging.debug(f"...{this.name} got {varName} from envionment")
-            return envVar
-
-        return None
-
-    # Takes config values and keywords and makes them member variables.
-    # CLI args (kwargs) always take priority over config values.
-    def PopulateVars(this, **kwargs):
         if (this.config is not None):
-            logging.debug(f"<---- vars from config ---->")
             for key, val in this.config.items():
-                this.SetVar(key, val)
-            logging.debug(f">----<")
-        logging.debug(f"<---- vars from args ---->")
-        for key, val in kwargs.items():
-            if (key.startswith("--")):  # trim cli args
-                key = key[2:]
-            this.SetVar(key, val)
-        logging.debug(f">----<")
+                if (key == varName):
+                    logging.debug(f"...got {varName} from local config.")
+                    return val
+
+        return this.executor.Fetch(varName)
+
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
     # Projects should have a name of {project-type}_{project-name}.
-    # For information on how projects should be labelled see: https://eons.dev/convention/naming/
-    # For information on how projects should be organized, see: https://eons.dev/convention/uri-names/
+    # For information on how projects should be labelled see: https://eons.llc/convention/naming/
+    # For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
     def PopulateProjectDetails(this, **kwargs):
         this.os = platform.system()
         this.executor = kwargs.pop("executor")
 
         this.PopulatePaths(kwargs.pop("path"), kwargs.pop("build_in"))
+        this.PopulateLocalConfig()
+
+        for key, var in this.configMap.items():
+            this.Set(key, this.Fetch(key))
 
         details = os.path.basename(this.rootPath).split("_")
-        this.projectType = details[0]
-        if (len(details) > 1):
+        if (not this.projectType):
+            this.projectType = details[0]
+        if (not this.projectName and len(details) > 1):
             this.projectName = '_'.join(details[1:])
 
-        configPath = os.path.join(this.rootPath, "build.json")
-        this.config = None
-        if (os.path.isfile(configPath)):
-            configFile = open(configPath, "r")
-            this.config = jsonpickle.decode(configFile.read())
-            logging.debug(f"Got config contents: {this.config}")
-        else:
-            logging.debug(f"No config file found at {configPath}")
-
-        this.PopulateVars(**kwargs)
 
     # RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
     # Anything in the "run_when" list will require a corresponding --event specification to run.
@@ -161,6 +146,7 @@ class Builder(e.UserFunctor):
                     f"Skipping next builder: {nextBuilder['build']}; required events not met (needs {nextBuilder['run_when']} but only have {this.events})")
                 return False
         return True
+
 
     # Creates the folder structure for the next build step.
     # RETURNS the next buildPath.
@@ -215,6 +201,7 @@ class Builder(e.UserFunctor):
         logging.debug(f">----<")
         return nextPath
 
+
     # Runs the next Builder.
     # Uses the Executor passed to *this.
     def BuildNext(this):
@@ -232,6 +219,7 @@ class Builder(e.UserFunctor):
             this.executor.Execute(build=nxt["build"], path=nxtPath, build_in=buildFolder, events=this.events,
                                   parent=this, name=this.projectName, type=this.projectType)
 
+
     # Override of eons.UserFunctor method. See that class for details.
     def ValidateArgs(this, **kwargs):
         # logging.debug(f"Got arguments: {kwargs}")
@@ -242,9 +230,9 @@ class Builder(e.UserFunctor):
             if (hasattr(this, rkw)):
                 continue
 
-            fetched = this.FetchVar(rkw)
+            fetched = this.Fetch(rkw)
             if (fetched is not None):
-                this.SetVar(rkw, fetched)
+                this.Set(rkw, fetched)
                 continue
 
             # Nope. Failed.
@@ -256,13 +244,14 @@ class Builder(e.UserFunctor):
             if (hasattr(this, okw)):
                 continue
 
-            fetched = this.FetchVar(okw)
+            fetched = this.Fetch(okw)
             if (fetched is not None):
-                this.SetVar(okw, fetched)
+                this.Set(okw, fetched)
                 continue
 
-            logging.debug(f"Failed to fetch {okw}. Using defualt value: {default}")
-            this.SetVar(okw, default)
+            logging.debug(f"Failed to fetch {okw}. Using default value: {default}")
+            this.Set(okw, default)
+
 
     # Override of eons.Functor method. See that class for details
     def UserFunction(this, **kwargs):
@@ -292,11 +281,13 @@ class Builder(e.UserFunctor):
         else:
             logging.error("Build did not succeed.")
 
+
     # RETURNS: an opened file object for writing.
     # Creates the path if it does not exist.
     def CreateFile(this, file, mode="w+"):
         Path(os.path.dirname(os.path.abspath(file))).mkdir(parents=True, exist_ok=True)
         return open(file, mode)
+
 
     # Run whatever.
     # DANGEROUS!!!!!
