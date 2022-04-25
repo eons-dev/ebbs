@@ -53,6 +53,7 @@ class EBBS(e.Executor):
 
 
     #Run a build script.
+    #RETURNS whether or not the build was successful.
     def Execute(this, build, path, build_in, events, **kwargs):
         if (not build):
             builder = Builder("EMPTY")
@@ -60,3 +61,4 @@ class EBBS(e.Executor):
             builder = this.GetRegistered(build, "build")
         logging.debug(f"Executing {build} in {path}/{build_in} with events {events} and additional args: {kwargs}")
         builder(executor=this, path=path, build_in=build_in, events=events, **kwargs)
+        return builder.DidBuildSucceed()

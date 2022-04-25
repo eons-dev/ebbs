@@ -109,7 +109,7 @@ class Builder(e.UserFunctor):
     #    second: the local config file
     #    third: the executor (args > config > environment)
     # RETURNS the value of the given variable or None.
-    def Fetch(this, varName):
+    def Fetch(this, varName, default=None, enableEnvironment=True):
         if (hasattr(this, varName)):
             return getattr(this, varName)
 
@@ -119,7 +119,7 @@ class Builder(e.UserFunctor):
                     logging.debug(f"...got {varName} from local config.")
                     return val
 
-        return this.executor.Fetch(varName)
+        return this.executor.Fetch(varName, default, enableEnvironment)
 
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
@@ -134,12 +134,12 @@ class Builder(e.UserFunctor):
         this.PopulateLocalConfig()
 
         for key, var in this.configMap.items():
-            this.Set(key, this.Fetch(key))
+            this.Set(key, this.Fetch(key, default=None))
 
         details = os.path.basename(this.rootPath).split("_")
-        if (not this.projectType):
+        if (this.projectType is None):
             this.projectType = details[0]
-        if (not this.projectName and len(details) > 1):
+        if (this.projectName is None and len(details) > 1):
             this.projectName = '_'.join(details[1:])
 
 
@@ -212,19 +212,28 @@ class Builder(e.UserFunctor):
     # Runs the next Builder.
     # Uses the Executor passed to *this.
     def BuildNext(this):
-        if (not this.config or not 'next' in this.config):
+        #When fetching what to do next, everything is valid EXCEPT the environment. Otherwise we could do something like `export next='nop'` and never quit.
+        next = this.Fetch('next', default=None, enableEnvironment=False)
+        if (next is None):
             logging.info("Build process complete!")
             return
 
-        for nxt in this.config['next']:
+        for nxt in next:
             if (not this.ValidateNext(nxt)):
                 continue
             nxtPath = this.PrepareNext(nxt)
             buildFolder = f"then_build_{nxt['build']}"
             if ("build_in" in nxt):
                 buildFolder = nxt["build_in"]
-            this.executor.Execute(build=nxt["build"], path=nxtPath, build_in=buildFolder, events=this.events,
-                                  parent=this, name=this.projectName, type=this.projectType)
+            result = this.executor.Execute(
+                build=nxt["build"],
+                path=nxtPath,
+                build_in=buildFolder,
+                events=this.events)
+            if (not result and ('tolerate_failure' not in nxt or not nxt['tolerate_failure'])):
+                logging.error(f"Building {nxt['build']} failed. Aborting.")
+                break
+
 
 
     # Override of eons.UserFunctor method. See that class for details.
@@ -251,13 +260,7 @@ class Builder(e.UserFunctor):
             if (hasattr(this, okw)):
                 continue
 
-            fetched = this.Fetch(okw)
-            if (fetched is not None):
-                this.Set(okw, fetched)
-                continue
-
-            logging.debug(f"Failed to fetch {okw}. Using default value: {default}")
-            this.Set(okw, default)
+            this.Set(okw, this.Fetch(okw, default=default))
 
 
     # Override of eons.Functor method. See that class for details
