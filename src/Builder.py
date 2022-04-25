@@ -109,14 +109,23 @@ class Builder(e.UserFunctor):
     #    second: the local config file
     #    third: the executor (args > config > environment)
     # RETURNS the value of the given variable or None.
-    def Fetch(this, varName, default=None, enableSelf=True, enableArgs=True, enableConfig=True, enableEnvironment=True):
-        ret = this.executor.Fetch(varName, default, enableSelf, enableArgs, enableConfig, enableEnvironment)
+    def Fetch(this,
+        varName,
+        default=None,
+        enableThisBuilder=True,
+        enableThisExecutor=True,
+        enableArgs=True,
+        enableLocalConfig=True,
+        enableExecutorConfig=True,
+        enableEnvironment=True):
 
-        if (enableSelf and hasattr(this, varName)):
+        ret = this.executor.Fetch(varName, default, enableThisExecutor, enableArgs, enableExecutorConfig, enableEnvironment)
+
+        if (enableThisBuilder and hasattr(this, varName)):
             logging.debug("...got {varName} from self ({this.name}).")
             return getattr(this, varName)
 
-        if (enableConfig and this.config is not None):
+        if (enableLocalConfig and this.config is not None):
             for key, val in this.config.items():
                 if (key == varName):
                     logging.debug(f"...got {varName} from local config.")
@@ -220,7 +229,14 @@ class Builder(e.UserFunctor):
     # Uses the Executor passed to *this.
     def BuildNext(this):
         #When fetching what to do next, everything is valid EXCEPT the environment. Otherwise we could do something like `export next='nop'` and never quit.
-        next = this.Fetch('next', default=None, enableEnvironment=False)
+        next = this.Fetch('next',
+            default=None,
+            enableThisBuilder=True,
+            enableThisExecutor=False,
+            enableArgs=False,
+            enableLocalConfig=True,
+            enableExecutorConfig=False,
+            enableEnvironment=False)
         if (next is None):
             logging.info("Build process complete!")
             return
