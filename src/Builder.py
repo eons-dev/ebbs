@@ -144,7 +144,7 @@ class Builder(e.UserFunctor):
         if (this.projectType is None):
             this.projectType = details[0]
         if (this.projectName is None):
-            if (len(details) > 1)
+            if (len(details) > 1):
                 this.projectName = '_'.join(details[1:])
             else:
                 this.projectName = e.INVALID_NAME()
