@@ -33,7 +33,7 @@ If you find ebbs to be getting in the way or overly challenging, let us know! Se
 
 When running ebbs, the builder you select will pull its configuration values from:
  1. the command line (e.g. in case you want to override anything)
- 2. a "build.json" in the provided build folder
+ 2. a "build.json" in the provided build folder (which can be specified via `--config`)
  3. the system environment (e.g. for keeping passwords out of repo-files and commands)
 
 You can specify the builder you'd like in one of 2 ways:
@@ -49,7 +49,7 @@ Lastly, you can specify a build folder (i.e. a folder to create within your proj
  2. `"build_in" : "BUILD_FOLDER"` in the build.json
 
 You can also specify any number of other arguments in any of the command line, build.json, and system environments.
-For example, `export pypi_username="__token__"` would make `this.pypi_username` in the "py" Builder return `__token__`, assuming you don't set `"pypi_username" : "something else"` in the build.json nor specify `--pypi_username "something-else"` on the command line.
+For example, `export pypi_username="__token__"` would make `this.Fetch('pypi_username)` in the "py" Builder return `__token__`, assuming you don't set `"pypi_username" : "something else"` in the build.json nor specify `--pypi-username "something else"` on the command line.
 
 As always, use `ebbs --help` for help ;)
 
@@ -62,12 +62,10 @@ To make things easy, you can search for `clearBuildPath`. If you see `this.clear
 
 All Builders are searched for in the local file system from where ebbs was called within the following folders:
 ```python
-this.RegisterDirectory("ebbs")
-#and 
-"eons" #per the eons.Executor.defaultRepoDirectory
+"./eons" #per the eons.Executor.defaultRepoDirectory
 ```
 NOTE: Collectively, these folders, within your project folder, are called the "workspace"
-For example, `me@mine:~/workspace$ ebbs` would cause the workspace to be "~/workspace" and ebbs would look in "~/workspace/ebbs/" and "~/workspace/eons/" for any Builders.
+For example, `me@mine:~/workspace$ ebbs` would cause the workspace to be "~/workspace" and ebbs would look in "~/workspace/eons/" for any Builders.
 
 If the build you specified is not found within one of those directories, ebbs will try to download it from the remote repository with a name of `build_{builder}`. The downloaded build script will be saved to whatever directory you set in `--repo-store` (default "./eons/").
 
@@ -102,12 +100,11 @@ Online repository settings can be specified with:
 --repo-password
 ```
 
-NOTE: you do not need to supply any repo settings to download packages from the public repository.
-Because these creds are not pulled from environment variables and are visible on the command line, it is advisable to use app tokens with short expirations. This will be addressed in a future release.
+NOTE: you do not need to supply any repo credentials or other settings in order to download packages from the public repository.
 
 For more info on the repo integration, see [the eons library](https://github.com/eons-dev/lib_eons#online-repository)
 
-It is also worth noting that the online repository system is handled upstream (and downstream, for Publish) of ebbs. As of the time of writing, the upstream `eons` library does not support the same build.json and environment searching that ebbs does. This will be addressed in a future release.
+It is also worth noting that the online repository system is handled upstream (and downstream, for Publish) of ebbs.
 
 By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure) for more info.
 
@@ -191,10 +188,11 @@ In order to accommodate more complex builds, ebbs supports the use of a build.js
 
 Each Builder will record which arguments it needs and wants in order to function. Those arguments are then populated from:
 1. The system environment
-2. The build.json
-3. The command line
+2. The configuration file supplied to ebbs (e.g. build.json in the root directory)
+3. The local configuration file (e.g. build.json in the build directory)
+4. The command line
 
-Where, the command line overrides anything specified in the environment and config file.
+Where, the command line overrides anything specified in the environment and config files.
 
 ### I Want One!
 

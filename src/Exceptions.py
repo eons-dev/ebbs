@@ -2,7 +2,7 @@
 class BuildError(Exception): pass
 
 
-# Exception used for miscillaneous build errors.
+# Exception used for miscellaneous build errors.
 class OtherBuildError(BuildError): pass
 
 

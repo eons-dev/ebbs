@@ -10,6 +10,13 @@ class EBBS(e.Executor):
 
         this.RegisterDirectory("ebbs")
 
+    #Configure class defaults.
+    #Override of eons.Executor method. See that class for details
+    def Configure(this):
+        super().Configure()
+
+        this.defualtConfigFile = "build.json"
+
     #Override of eons.Executor method. See that class for details
     def RegisterAllClasses(this):
         super().RegisterAllClasses()
