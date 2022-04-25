@@ -8,7 +8,7 @@ class EBBS(e.Executor):
     def __init__(this):
         super().__init__(name="eons Basic Build System", descriptionStr="A hackable build system for all builds!")
 
-        this.RegisterDirectory("ebbs")
+        # this.RegisterDirectory("ebbs")
 
 
     #Configure class defaults.
@@ -22,15 +22,14 @@ class EBBS(e.Executor):
     #Override of eons.Executor method. See that class for details
     def RegisterAllClasses(this):
         super().RegisterAllClasses()
-        this.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
+        # this.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
 
 
     #Override of eons.Executor method. See that class for details
     def AddArgs(this):
         super().AddArgs()
         this.argparser.add_argument('path', type = str, nargs='?', metavar = '/project/', help = 'path to project folder', default = '.')
-        this.argparser.add_argument('-i', '--build-in', type = str, metavar = 'build', help = 'name of folder to use inside project (/project/build/)', default = 'build', dest = 'build_in')
-        this.argparser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'build of files to build', dest = 'builder')
+        this.argparser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'script to use for building', dest = 'builder')
         this.argparser.add_argument('-e','--event', type = str, action='append', nargs='*', metavar = 'release', help = 'what is going on that triggered this build?', dest = 'events')
 
 
@@ -49,7 +48,7 @@ class EBBS(e.Executor):
     #Override of eons.Executor method. See that class for details
     def UserFunction(this, **kwargs):
         super().UserFunction(**kwargs)
-        this.Execute(this.args.builder, this.args.path, this.args.build_in, this.events, **this.extraArgs)
+        this.Execute(this.args.builder, this.args.path, this.Fetch('build_in', default="build"), this.events, **this.extraArgs)
 
 
     #Run a build script.
