@@ -147,7 +147,7 @@ class Builder(e.UserFunctor):
         this.PopulateLocalConfig()
 
         for key, var in this.configMap.items():
-            this.Set(key, this.Fetch(key, default=None, enableSelf=False))
+            this.Set(key, this.Fetch(key, default=None, enableThisBuilder=False, enableThisExecutor=False))
 
         details = os.path.basename(this.rootPath).split("_")
         if (this.projectType is None):
