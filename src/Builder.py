@@ -30,11 +30,13 @@ class Builder(e.UserFunctor):
             "clear_build_path": "clearBuildPath"
         }
 
+
     # Build things!
     # Override this or die.
     # Empty Builders can be used with build.json to start build trees.
     def Build(this):
         pass
+
 
     # RETURN whether or not the build was successful.
     # Override this to perform whatever success checks are necessary.
@@ -42,13 +44,16 @@ class Builder(e.UserFunctor):
     def DidBuildSucceed(this):
         return True
 
+
     # Hook for any pre-build configuration
     def PreBuild(this):
         pass
 
+
     # Hook for any post-build configuration
     def PostBuild(this):
         pass
+
 
     # Sets the build path that should be used by children of *this.
     # Also sets src, inc, lib, and dep paths, if they are present.
@@ -76,6 +81,7 @@ class Builder(e.UserFunctor):
             else:
                 setattr(this, f"{path}Path", None)
 
+
     # Populate the configuration details for *this.
     def PopulateLocalConfig(this, configName="build.json"):
         this.config = None
@@ -86,6 +92,7 @@ class Builder(e.UserFunctor):
             this.config = jsonpickle.decode(configFile.read())
             configFile.close()
             logging.debug(f"Got local config contents: {this.config}")
+
 
     # Wrapper around setattr
     def Set(this, varName, value):

@@ -10,6 +10,7 @@ class EBBS(e.Executor):
 
         this.RegisterDirectory("ebbs")
 
+
     #Configure class defaults.
     #Override of eons.Executor method. See that class for details
     def Configure(this):
@@ -17,10 +18,12 @@ class EBBS(e.Executor):
 
         this.defualtConfigFile = "build.json"
 
+
     #Override of eons.Executor method. See that class for details
     def RegisterAllClasses(this):
         super().RegisterAllClasses()
         this.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
+
 
     #Override of eons.Executor method. See that class for details
     def AddArgs(this):
@@ -42,10 +45,12 @@ class EBBS(e.Executor):
         if (not this.args.builder):
             logging.debug("No build specified. Assuming build pipeline is written in build.json.")
 
+
     #Override of eons.Executor method. See that class for details
     def UserFunction(this, **kwargs):
         super().UserFunction(**kwargs)
         this.Execute(this.args.builder, this.args.path, this.args.build_in, this.events, **this.extraArgs)
+
 
     #Run a build script.
     def Execute(this, build, path, build_in, events, **kwargs):
