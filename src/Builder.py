@@ -243,7 +243,6 @@ class Builder(e.UserFunctor):
             enableEnvironment=False)
 
         if (next is None):
-            logging.info("Build process complete!")
             return
 
         for nxt in next:

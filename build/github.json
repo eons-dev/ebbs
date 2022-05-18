@@ -2,7 +2,7 @@
   "name" : "ebbs",
   "type" : "bin",
   "clear_build_path" : true,
-  "build_in" : "out",
+  "build_in" : "github",
   "next": [
     {
       "build" : "py",
