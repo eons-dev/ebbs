@@ -25,4 +25,4 @@ jobs:
         repo_password: ${{ secrets.INFRASTRUCTURE_PASSWORD }}
       run: |
         cd build
-        ebbs -v . --config "build.json" --event "pull_request"
+        ebbs -v . --config "github.json" --event "pull_request"

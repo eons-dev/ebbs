@@ -48,7 +48,10 @@ class EBBS(e.Executor):
     #Override of eons.Executor method. See that class for details
     def UserFunction(this, **kwargs):
         super().UserFunction(**kwargs)
-        this.Execute(this.args.builder, this.args.path, this.Fetch('build_in', default="build"), this.events, **this.extraArgs)
+        if (this.Execute(this.args.builder, this.args.path, this.Fetch('build_in', default="build"), this.events, **this.extraArgs)):
+            logging.info("Build process complete!")
+        else:
+            logging.info("Build failed.")
 
 
     #Run a build script.

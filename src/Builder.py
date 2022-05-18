@@ -229,16 +229,20 @@ class Builder(e.UserFunctor):
     # Uses the Executor passed to *this.
     def BuildNext(this):
         #When fetching what to do next, everything is valid EXCEPT the environment. Otherwise we could do something like `export next='nop'` and never quit.
+        #A similar situation arises when using the global config for each build step. We only use the global config if *this is the first builder and no local config was supplied.
+        shouldUseExecutor = this.config is None
+        if (shouldUseExecutor):
+            logging.debug(f"{this.name} has no local config, so we will see if the Executor knows what to do next.")
         next = this.Fetch('next',
             default=None,
             enableThisBuilder=True,
-            enableThisExecutor=False,
-            enableArgs=False,
+            enableThisExecutor=shouldUseExecutor,
+            enableArgs=shouldUseExecutor,
             enableLocalConfig=True,
-            enableExecutorConfig=False,
+            enableExecutorConfig=shouldUseExecutor,
             enableEnvironment=False)
+
         if (next is None):
-            logging.info("Build process complete!")
             return
 
         for nxt in next:
