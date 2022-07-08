@@ -94,13 +94,58 @@ class Builder(e.UserFunctor):
             logging.debug(f"Got local config contents: {this.config}")
 
 
+    # Convert Fetched values to their proper type.
+    # This can also allow for use of {this.val} expression evaluation.
+    def EvaluateToType(this, value, evaluateExpression = False):
+        if (isinstance(value, dict)):
+            ret = {}
+            for key, value in value.items():
+                ret[key] = this.EvaluateSetting(value)
+            return ret
+
+        elif (isinstance(value, list)):
+            ret = []
+            for value in value:
+                ret.append(this.EvaluateSetting(value))
+            return ret
+
+        else:
+            if (evaluateExpression):
+                evaluatedvalue = eval(f"f\"{value}\"")
+            else:
+                evaluatedvalue = value
+
+            #Check original type and return the proper value.
+            if (isinstance(value, (bool, int, float)) and evaluatedvalue == str(value)):
+                return value
+
+            #Check resulting type and return a casted value.
+            #TODO: is there a better way than double cast + comparison?
+            if (evaluatedvalue.lower() == "false"):
+                return False
+            elif (evaluatedvalue.lower() == "true"):
+                return True
+
+            try:
+                if (str(float(evaluatedvalue)) == evaluatedvalue):
+                    return float(evaluatedvalue)
+            except:
+                pass
+
+            try:
+                if (str(int(evaluatedvalue)) == evaluatedvalue):
+                    return int(evaluatedvalue)
+            except:
+                pass
+
     # Wrapper around setattr
     def Set(this, varName, value):
+        value = this.EvaluateToType(value)
         for key, var in this.configMap.items():
             if (varName == key):
                 varName = var
                 break
-        logging.debug(f"Setting {varName} = {value}")
+        logging.debug(f"Setting ({type(value)}) {varName} = {value}")
         setattr(this, varName, value)
 
 
