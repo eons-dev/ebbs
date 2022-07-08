@@ -100,20 +100,20 @@ class Builder(e.UserFunctor):
         if (isinstance(value, dict)):
             ret = {}
             for key, value in value.items():
-                ret[key] = this.EvaluateSetting(value)
+                ret[key] = this.EvaluateToType(value)
             return ret
 
         elif (isinstance(value, list)):
             ret = []
             for value in value:
-                ret.append(this.EvaluateSetting(value))
+                ret.append(this.EvaluateToType(value))
             return ret
 
         else:
             if (evaluateExpression):
                 evaluatedvalue = eval(f"f\"{value}\"")
             else:
-                evaluatedvalue = value
+                evaluatedvalue = str(value)
 
             #Check original type and return the proper value.
             if (isinstance(value, (bool, int, float)) and evaluatedvalue == str(value)):
@@ -137,6 +137,9 @@ class Builder(e.UserFunctor):
                     return int(evaluatedvalue)
             except:
                 pass
+
+            #The type must be a string.
+            return evaluatedvalue
 
     # Wrapper around setattr
     def Set(this, varName, value):
