@@ -312,6 +312,7 @@ this.srcPath = os.path.abspath(os.path.join(this.buildPath, "../src"))
 this.incPath = os.path.abspath(os.path.join(this.buildPath, "../inc"))
 this.depPath = os.path.abspath(os.path.join(this.buildPath, "../dep"))
 this.libPath = os.path.abspath(os.path.join(this.buildPath, "../lib"))
+this.libPath = os.path.abspath(os.path.join(this.buildPath, "../bin"))
 this.testPath = os.path.abspath(os.path.join(this.buildPath, "../test"))
 ```
 As well as the following methods:  

@@ -72,6 +72,7 @@ class Builder(e.UserFunctor):
             "inc",
             "dep",
             "lib",
+            "bin",
             "test"
         ]
         for path in paths:
