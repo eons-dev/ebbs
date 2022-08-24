@@ -98,6 +98,9 @@ class Builder(e.UserFunctor):
     # Convert Fetched values to their proper type.
     # This can also allow for use of {this.val} expression evaluation.
     def EvaluateToType(this, value, evaluateExpression = False):
+        if (value == None or value == "None"):
+            return None
+
         if (isinstance(value, dict)):
             ret = {}
             for key, value in value.items():
