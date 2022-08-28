@@ -42,7 +42,7 @@ class EBBS(e.Executor):
             [[this.events.add(str(e)) for e in l] for l in this.args.events]
 
         if (not this.args.builder):
-            logging.debug("No build specified. Assuming build pipeline is written in build.json.")
+            logging.debug("No build specified. Assuming build pipeline is written in config.")
 
 
     #Override of eons.Executor method. See that class for details

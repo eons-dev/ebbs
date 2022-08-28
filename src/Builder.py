@@ -1,20 +1,14 @@
 import os
 import logging
-import platform
 import shutil
 import jsonpickle
 from pathlib import Path
-from subprocess import Popen, PIPE, STDOUT
 import eons as e
 from .Exceptions import *
-
 
 class Builder(e.UserFunctor):
     def __init__(this, name=e.INVALID_NAME()):
         super().__init__(name)
-
-        # For optional args, supply the arg name as well as a default value.
-        this.optionalKWArgs = {}
 
         # What can this build, "bin", "lib", "img", ... ?
         this.supportedProjectTypes = []
@@ -24,11 +18,13 @@ class Builder(e.UserFunctor):
 
         this.clearBuildPath = False
 
-        this.configMap = {
+        this.configNameOverrides = {
             "name": "projectName",
             "type": "projectType",
             "clear_build_path": "clearBuildPath"
         }
+
+        this.enableRollback = False
 
 
     # Build things!
@@ -38,11 +34,16 @@ class Builder(e.UserFunctor):
         pass
 
 
-    # RETURN whether or not the build was successful.
+    # Deprecated!
     # Override this to perform whatever success checks are necessary.
     # This will be called before running the next build step.
     def DidBuildSucceed(this):
         return True
+
+
+    # API compatibility shim
+    def DidUserFunctionSucceed(this):
+        return this.DidBuildSucceed()
 
 
     # Hook for any pre-build configuration
@@ -95,67 +96,6 @@ class Builder(e.UserFunctor):
             logging.debug(f"Got local config contents: {this.config}")
 
 
-    # Convert Fetched values to their proper type.
-    # This can also allow for use of {this.val} expression evaluation.
-    def EvaluateToType(this, value, evaluateExpression = False):
-        if (value == None or value == "None"):
-            return None
-
-        if (isinstance(value, dict)):
-            ret = {}
-            for key, value in value.items():
-                ret[key] = this.EvaluateToType(value)
-            return ret
-
-        elif (isinstance(value, list)):
-            ret = []
-            for value in value:
-                ret.append(this.EvaluateToType(value))
-            return ret
-
-        else:
-            if (evaluateExpression):
-                evaluatedvalue = eval(f"f\"{value}\"")
-            else:
-                evaluatedvalue = str(value)
-
-            #Check original type and return the proper value.
-            if (isinstance(value, (bool, int, float)) and evaluatedvalue == str(value)):
-                return value
-
-            #Check resulting type and return a casted value.
-            #TODO: is there a better way than double cast + comparison?
-            if (evaluatedvalue.lower() == "false"):
-                return False
-            elif (evaluatedvalue.lower() == "true"):
-                return True
-
-            try:
-                if (str(float(evaluatedvalue)) == evaluatedvalue):
-                    return float(evaluatedvalue)
-            except:
-                pass
-
-            try:
-                if (str(int(evaluatedvalue)) == evaluatedvalue):
-                    return int(evaluatedvalue)
-            except:
-                pass
-
-            #The type must be a string.
-            return evaluatedvalue
-
-    # Wrapper around setattr
-    def Set(this, varName, value):
-        value = this.EvaluateToType(value)
-        for key, var in this.configMap.items():
-            if (varName == key):
-                varName = var
-                break
-        logging.debug(f"Setting ({type(value)}) {varName} = {value}")
-        setattr(this, varName, value)
-
-
     # Will try to get a value for the given varName from:
     #    first: this
     #    second: the local config file
@@ -164,16 +104,15 @@ class Builder(e.UserFunctor):
     def Fetch(this,
         varName,
         default=None,
-        enableThisBuilder=True,
-        enableThisExecutor=True,
+        enableThis=True,
+        enableExecutor=True,
         enableArgs=True,
-        enableLocalConfig=True,
         enableExecutorConfig=True,
-        enableEnvironment=True):
-
-        ret = this.executor.Fetch(varName, default, enableThisExecutor, enableArgs, enableExecutorConfig, enableEnvironment)
-
-        if (enableThisBuilder and hasattr(this, varName)):
+        enableEnvironment=True,
+        enableLocalConfig=True):
+            
+        # Duplicate code from eons.UserFunctor in order to establish precedence.
+        if (enableThis and hasattr(this, varName)):
             logging.debug("...got {varName} from self ({this.name}).")
             return getattr(this, varName)
 
@@ -183,7 +122,8 @@ class Builder(e.UserFunctor):
                     logging.debug(f"...got {varName} from local config.")
                     return val
 
-        return ret
+        return super().Fetch(varName, default, enableThis, enableExecutor, enableArgs, enableExecutorConfig, enableEnvironment)
+
 
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
@@ -198,8 +138,8 @@ class Builder(e.UserFunctor):
         this.PopulatePaths(kwargs.pop("path"), kwargs.pop('build_in'))
         this.PopulateLocalConfig()
 
-        for key, var in this.configMap.items():
-            this.Set(key, this.Fetch(key, default=None, enableThisBuilder=False, enableThisExecutor=False))
+        for key, var in this.configNameOverrides.items():
+            this.Set(key, this.Fetch(key, default=None, enableThis=False, enableExecutor=False))
 
         details = os.path.basename(this.rootPath).split("_")
         if (this.projectType is None):
@@ -241,31 +181,13 @@ class Builder(e.UserFunctor):
             for cpy in nextBuilder["copy"]:
                 # logging.debug(f"copying: {cpy}")
                 for src, dst in cpy.items():
-                    destination = os.path.join(nextPath, dst)
-                    if (os.path.isfile(src)):
-                        logging.debug(f"Copying file {src} to {destination}")
-                        try:
-                            shutil.copy(src, destination)
-                        except shutil.Error as exc:
-                            errors = exc.args[0]
-                            for error in errors:
-                                src, dst, msg = error
-                                logging.debug(f"{msg}")
-                    elif (os.path.isdir(src)):
-                        logging.debug(f"Copying directory {src} to {destination}")
-                        try:
-                            shutil.copytree(src, destination)
-                        except shutil.Error as exc:
-                            errors = exc.args[0]
-                            for error in errors:
-                                src, dst, msg = error
-                                logging.debug(f"{msg}")
+                    this.Copy(src, dst)
 
         if ("config" in nextBuilder):
             nextConfigFile = os.path.join(nextPath, "build.json")
             logging.debug(f"writing: {nextConfigFile}")
             nextConfig = open(nextConfigFile, "w")
-            for key, var in this.configMap.items():
+            for key, var in this.configNameOverrides.items():
                 if (key not in nextBuilder["config"]):
                     val = getattr(this, var)
                     logging.debug(f"Adding to config: {key} = {val}")
@@ -287,12 +209,12 @@ class Builder(e.UserFunctor):
             logging.debug(f"{this.name} has no local config, so we will see if the Executor knows what to do next.")
         next = this.Fetch('next',
             default=None,
-            enableThisBuilder=True,
-            enableThisExecutor=shouldUseExecutor,
+            enableThis=True,
+            enableExecutor=shouldUseExecutor,
             enableArgs=shouldUseExecutor,
-            enableLocalConfig=True,
             enableExecutorConfig=shouldUseExecutor,
-            enableEnvironment=False)
+            enableEnvironment=False,
+            enableLocalConfig=True)
 
         if (next is None):
             return
@@ -321,33 +243,14 @@ class Builder(e.UserFunctor):
 
         this.PopulateProjectDetails(**kwargs)
 
-        for rkw in this.requiredKWArgs:
-            if (hasattr(this, rkw)):
-                continue
-
-            fetched = this.Fetch(rkw)
-            if (fetched is not None):
-                this.Set(rkw, fetched)
-                continue
-
-            # Nope. Failed.
-            errStr = f"{rkw} required but not found."
-            logging.error(errStr)
-            raise BuildError(errStr)
-
-        for okw, default in this.optionalKWArgs.items():
-            if (hasattr(this, okw)):
-                continue
-
-            this.Set(okw, this.Fetch(okw, default=default))
+        super().ValidateArgs(**kwargs)
 
 
     # Override of eons.Functor method. See that class for details
     def UserFunction(this, **kwargs):
         if (this.clearBuildPath):
-            if (os.path.exists(this.buildPath)):
-                logging.info(f"DELETING {this.buildPath}")
-                shutil.rmtree(this.buildPath)
+            this.Delete(this.buildPath)
+
         # mkpath(this.buildPath) <- This just straight up doesn't work. Race condition???
         Path(this.buildPath).mkdir(parents=True, exist_ok=True)
         os.chdir(this.buildPath)
@@ -369,23 +272,3 @@ class Builder(e.UserFunctor):
             this.BuildNext()
         else:
             logging.error("Build did not succeed.")
-
-
-    # RETURNS: an opened file object for writing.
-    # Creates the path if it does not exist.
-    def CreateFile(this, file, mode="w+"):
-        Path(os.path.dirname(os.path.abspath(file))).mkdir(parents=True, exist_ok=True)
-        return open(file, mode)
-
-
-    # Run whatever.
-    # DANGEROUS!!!!!
-    # TODO: check return value and raise exceptions?
-    # per https://stackoverflow.com/questions/803265/getting-realtime-output-using-subprocess
-    def RunCommand(this, command):
-        p = Popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
-        while True:
-            line = p.stdout.readline()
-            if (not line):
-                break
-            print(line.decode('utf8')[:-1])  # [:-1] to strip excessive new lines.
