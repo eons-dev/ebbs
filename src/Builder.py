@@ -131,6 +131,7 @@ class Builder(e.UserFunctor):
     # For information on how projects should be labelled see: https://eons.llc/convention/naming/
     # For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
     def PopulateProjectDetails(this, **kwargs):
+        this.os = platform.system()
         this.executor = kwargs.pop('executor')
         this.events = kwargs.pop('events')
 
