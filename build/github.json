@@ -5,7 +5,8 @@
   "build_in" : "github",
   "next": [
     {
-      "build" : "py",
+      "build" : "py_package",
+      "build_in" : "out",
       "copy" : [
         {"../../src/" : "src/"},
         {"../../inc/" : "inc/"},
@@ -14,6 +15,7 @@
         {"../../LICENSE" : "LICENSE"}
       ],
       "config" : {
+        "clear_build_path" : false,
         "author_name" : "eons",
         "author_email" : "support@eons.llc",
         "description" : "eons Basic Build System",
@@ -22,6 +24,43 @@
         "python_min" : "3.7",
         "classifiers" : [
           "Development Status :: 4 - Beta"
+        ],
+        "next" : [
+          {
+            "build" : "py_install",
+            "build_in" : "../",
+            "config" : {
+              "next" : [
+                {
+                  "build" : "py_test",
+                  "build_in" : "./",
+                  "config" : {
+                    "test_path" : "./test/unit/",
+                    "next" : [
+                      {
+                        "build" : "test",
+                        "build_in" : "./",
+                        "config": {
+                          "test_path" : "./test/integration/",
+                          "test_fixture" : "repo_connection",
+                          "next" : [
+                            {
+                              "build" : "py_publish",
+                              "build_in" : "./",
+                              "run_when" : [
+                                "release"
+                              ],
+                              "config" : {}
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
         ]
       }
     }
