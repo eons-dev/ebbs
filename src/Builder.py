@@ -124,21 +124,25 @@ class Builder(e.UserFunctor):
 
         return super().Fetch(varName, default, enableThis, enableExecutor, enableArgs, enableExecutorConfig, enableEnvironment)
 
+    # Override of eons.UserFunctor method. See that class for details.
+    def ParseInitialArgs(this):
+        super().ParseInitialArgs()
+        this.events = this.kwargs.pop('events')
 
 
     # Calls PopulatePaths and PopulateVars after getting information from local directory
     # Projects should have a name of {project-type}_{project-name}.
     # For information on how projects should be labelled see: https://eons.llc/convention/naming/
     # For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
-    def PopulateProjectDetails(this, **kwargs):
-        this.executor = kwargs.pop('executor')
-        this.events = kwargs.pop('events')
-
-        this.PopulatePaths(kwargs.pop("path"), kwargs.pop('build_in'))
+    def PopulateProjectDetails(this):
+        this.PopulatePaths(this.kwargs.pop("path"), this.kwargs.pop('build_in'))
         this.PopulateLocalConfig()
 
-        for key, var in this.configNameOverrides.items():
-            this.Set(key, this.Fetch(key, default=None, enableThis=False, enableExecutor=False))
+        # This is messy because we can't query this.name or executor.name and need to get "name" from a config or arg val to set projectName.
+        for key, mem in this.configNameOverrides.items():
+            this.Set(key, this.Fetch(key, default=this.executor.Fetch(key, default=None, enableThis=False), enableThis=False, enableExecutor=False))
+            if (getattr(this, mem) is None):
+                logging.warning(f"Not configured: {key}")
 
         details = os.path.basename(this.rootPath).split("_")
         if (this.projectType is None):
@@ -154,18 +158,28 @@ class Builder(e.UserFunctor):
     # Anything in the "run_when" list will require a corresponding --event specification to run.
     # For example "run_when":"publish" would require `--event publish` to enable publication Builders in the workflow.
     def ValidateNext(this, nextBuilder):
-        if ("run_when" in nextBuilder):
-            if (not set([str(r) for r in nextBuilder["run_when"]]).issubset(this.events)):
-                logging.info(
-                    f"Skipping next builder: {nextBuilder['build']}; required events not met (needs {nextBuilder['run_when']} but only have {this.events})")
+        if ("run_when_none" in nextBuilder):
+            if ([r for r in nextBuilder["run_when_none"] if r in this.events]):
+                logging.info(f"Skipping next builder: {nextBuilder['build']}; prohibitive events found (cannot have any of {nextBuilder['run_when_none']} and have {this.events})")
                 return False
+
+        if ("run_when_any" in nextBuilder):
+            if (not [r for r in nextBuilder["run_when_any"] if r in this.events]): #[] is false
+                logging.info(f"Skipping next builder: {nextBuilder['build']}; required events not met (needs any of {nextBuilder['run_when_any']} but only have {this.events})")
+                return False
+
+        if ("run_when_all" in nextBuilder):
+            if (not set([str(r) for r in nextBuilder["run_when_all"]]).issubset(this.events)):
+                logging.info(f"Skipping next builder: {nextBuilder['build']}; required events not met (needs all {nextBuilder['run_when_all']} but only have {this.events})")
+                return False
+
         return True
 
 
     # Creates the folder structure for the next build step.
     # RETURNS the next buildPath.
     def PrepareNext(this, nextBuilder):
-        logging.debug(f"<---- preparing for next builder: {nextBuilder['build']} ---->")
+        logging.debug(f"<---- Preparing for next builder: {nextBuilder['build']} ---->")
         # logging.debug(f"Preparing for next builder: {nextBuilder}")
 
         nextPath = "."
@@ -194,7 +208,7 @@ class Builder(e.UserFunctor):
             nextConfig.write(jsonpickle.encode(nextBuilder["config"]))
             nextConfig.close()
 
-        logging.debug(f">----<")
+        logging.debug(f">---- Completed preparation for: {nextBuilder['build']} ----<")
         return nextPath
 
 
@@ -237,16 +251,16 @@ class Builder(e.UserFunctor):
 
 
     # Override of eons.UserFunctor method. See that class for details.
-    def ValidateArgs(this, **kwargs):
-        # logging.debug(f"Got arguments: {kwargs}")
+    def ValidateArgs(this):
+        # logging.debug(f"Got arguments: {this.kwargs}")
 
-        this.PopulateProjectDetails(**kwargs)
+        this.PopulateProjectDetails()
 
-        super().ValidateArgs(**kwargs)
+        super().ValidateArgs()
 
 
     # Override of eons.Functor method. See that class for details
-    def UserFunction(this, **kwargs):
+    def UserFunction(this):
         if (this.clearBuildPath):
             this.Delete(this.buildPath)
 
@@ -263,7 +277,7 @@ class Builder(e.UserFunctor):
 
         logging.debug(f"<---- Building {this.name} ---->")
         this.Build()
-        logging.debug(f">----<")
+        logging.debug(f">---- Done Building {this.name} ----<")
 
         this.PostBuild()
 
