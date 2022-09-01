@@ -155,8 +155,8 @@ class Builder(e.UserFunctor):
 
 
     # RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
-    # Anything in the "run_when" list will require a corresponding --event specification to run.
-    # For example "run_when":"publish" would require `--event publish` to enable publication Builders in the workflow.
+    # Anything in the "run_when_any" list will require a corresponding --event specification to run.
+    # For example "run_when_any":["publish"] would require `--event publish` to enable publication Builders in the workflow.
     def ValidateNext(this, nextBuilder):
         if ("run_when_none" in nextBuilder):
             if ([r for r in nextBuilder["run_when_none"] if r in this.events]):
