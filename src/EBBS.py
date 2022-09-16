@@ -1,6 +1,7 @@
 import os
 import logging
 import eons as e
+from pathlib import Path
 from .Exceptions import *
 
 class EBBS(e.Executor):
@@ -44,6 +45,11 @@ class EBBS(e.Executor):
 
         if (not this.args.builder):
             logging.debug("No build specified. Assuming build pipeline is written in config.")
+
+
+    #Override of eons.Executor method. See that class for details
+    def InitData(this):
+        this.rootPath = Path(this.Fetch('path', '../')).resolve() #ebbs is usually called from a build folder in a project, i.e. .../build/../ = /
 
 
     #Override of eons.Executor method. See that class for details

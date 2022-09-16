@@ -194,7 +194,7 @@ class Builder(e.UserFunctor):
             for cpy in nextBuilder["copy"]:
                 # logging.debug(f"copying: {cpy}")
                 for src, dst in cpy.items():
-                    this.Copy(src, dst)
+                    this.Copy(src, dst, root=this.executor.rootPath)
 
         if ("config" in nextBuilder):
             nextConfigFile = os.path.join(nextPath, "build.json")
