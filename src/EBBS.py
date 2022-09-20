@@ -38,6 +38,7 @@ class EBBS(e.Executor):
         super().ParseArgs()
 
         this.args.path = os.getcwd() #used to be arg; now we hard code
+        this.rootPath = str(Path(this.args.path).resolve())
 
         this.events = set()
         if (this.args.events is not None):

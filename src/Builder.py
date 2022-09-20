@@ -34,7 +34,6 @@ class Builder(e.UserFunctor):
         pass
 
 
-    # Deprecated!
     # Override this to perform whatever success checks are necessary.
     # This will be called before running the next build step.
     def DidBuildSucceed(this):
