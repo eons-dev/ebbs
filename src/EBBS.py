@@ -1,10 +1,10 @@
 import os
 import logging
-import eons as e
+import eons
 from pathlib import Path
 from .Exceptions import *
 
-class EBBS(e.Executor):
+class EBBS(eons.Executor):
 
     def __init__(this):
         super().__init__(name="eons Basic Build System", descriptionStr="A hackable build system for all builds!")
@@ -50,7 +50,7 @@ class EBBS(e.Executor):
 
     #Override of eons.Executor method. See that class for details
     def InitData(this):
-        this.rootPath = Path(this.Fetch('path', '../')).resolve() #ebbs is usually called from a build folder in a project, i.e. .../build/../ = /
+        this.rootPath = Path(this.Fetch('path', '../')).resolve() #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
 
 
     #Override of eons.Executor method. See that class for details

@@ -3,11 +3,11 @@ import logging
 import shutil
 import jsonpickle
 from pathlib import Path
-import eons as e
+import eons
 from .Exceptions import *
 
-class Builder(e.UserFunctor):
-    def __init__(this, name=e.INVALID_NAME()):
+class Builder(eons.UserFunctor):
+    def __init__(this, name=eons.INVALID_NAME()):
         super().__init__(name)
 
         # What can this build, "bin", "lib", "img", ... ?
@@ -150,7 +150,7 @@ class Builder(e.UserFunctor):
             if (len(details) > 1):
                 this.projectName = '_'.join(details[1:])
             else:
-                this.projectName = e.INVALID_NAME()
+                this.projectName = eons.INVALID_NAME()
 
 
     # RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
