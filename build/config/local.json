@@ -1,27 +1,27 @@
 {
   "next": [
-    {
-      "build" : "py_package",
-      "build_in" : "pkg",
-      "config" : {
-        "clear_build_path" : false,
-        "author_name" : "eons",
-        "author_email" : "support@eons.llc",
-        "description" : "eons Basic Build System",
-        "package_url" : "https://github.com/eons-dev/bin_ebbs",
-        "license" : "MIT License",
-        "python_min" : "3.7",
-        "classifiers" : [
-          "Development Status :: 4 - Beta"
-        ],
-        "next" : [
-          {
-            "build" : "py_install",
-            "build_in" : "../",
-            "config" : {}
-          }
-        ]
-      }
-    }
+	{
+	  "build" : "py_package",
+	  "build_in" : "pkg",
+	  "config" : {
+		"clear_build_path" : false,
+		"author_name" : "eons",
+		"author_email" : "support@eons.llc",
+		"description" : "eons Basic Build System",
+		"package_url" : "https://github.com/eons-dev/bin_ebbs",
+		"license" : "MIT License",
+		"python_min" : "3.7",
+		"classifiers" : [
+		  "Development Status :: 4 - Beta"
+		],
+		"next" : [
+		  {
+			"build" : "py_install",
+			"build_in" : "../",
+			"config" : {}
+		  }
+		]
+	  }
+	}
   ]
 }

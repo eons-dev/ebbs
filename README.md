@@ -135,23 +135,23 @@ Here's an example build.json that builds a C++ project then pushes it to Dockerh
 {
   "clear_build_path" : true,
   "next": [
-    {
-      "build" : "in_container",
-      "config" : {
-        "image" : "eons/img_dev-webserver",
-        "copy_env" : [
-          "docker_username",
-          "docker_password"
-        ],
-        "next" : [
-          {
-            "build" : "cpp",
-            "build_in" : "build",
-            "copy" : [
-              {"../../inc/" : "inc/"},
-              {"../../src/" : "src/"}
-            ],
-            "config" : {
+	{
+	  "build" : "in_container",
+	  "config" : {
+		"image" : "eons/img_dev-webserver",
+		"copy_env" : [
+		  "docker_username",
+		  "docker_password"
+		],
+		"next" : [
+		  {
+			"build" : "cpp",
+			"build_in" : "build",
+			"copy" : [
+			  {"../../inc/" : "inc/"},
+			  {"../../src/" : "src/"}
+			],
+	        "config" : {
               "file_name" : "entrypoint",
               "cpp_version" : 17,
               "libs_shared": [
