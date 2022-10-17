@@ -7,7 +7,7 @@ from .Exceptions import *
 class EBBS(eons.Executor):
 
 	def __init__(this):
-		super().__init__(name="eons Basic Build System", descriptionStr="A hackable build system for all builds!")
+		super().__init__(name="Eons Basic Build System", descriptionStr="A hackable build system for all builds!")
 
 		# this.RegisterDirectory("ebbs")
 
@@ -70,10 +70,8 @@ class EBBS(eons.Executor):
 	def Function(this):
 		super().Function()
 		build_in = this.Fetch('build_in', default="build")
-		if (this.Build(this.parsedArgs.builder, this.parsedArgs.path, build_in, this.events, **this.extraArgs)):
-			logging.info("Build process complete!")
-		else:
-			logging.info("Build failed.")
+		if (not this.Build(this.parsedArgs.builder, this.parsedArgs.path, build_in, this.events, **this.extraArgs)):
+			logging.critical("Build failed.")
 
 
 	#Run a build script.
@@ -82,7 +80,7 @@ class EBBS(eons.Executor):
 		if (not build):
 			build = "default"
 
-		prettyPath = str(Path(path).joinpath(build_in).resolve())
-		logging.debug(f"Executing {build} in {prettyPath} with events {events} and additional args: {kwargs}")
+		# prettyPath = str(Path(path).joinpath(build_in).resolve())
+		# logging.debug(f"Building {build} in {prettyPath} with events {events} and additional args: {kwargs}")
 
 		return this.Execute(build, path=path, build_in=build_in, events=events, **kwargs)

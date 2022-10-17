@@ -256,12 +256,3 @@ class Builder(eons.StandardFunctor):
 		logging.debug(f">---- Done Building {this.name} ----<")
 
 		this.PostBuild()
-
-		if (this.DidBuildSucceed()):
-			ret = this.CallNext()
-			if (ret is None):
-				return True
-			return ret
-		else:
-			logging.error("Build did not succeed.")
-			return False

@@ -1,4 +1,4 @@
-# eons Basic Build System
+# Eons Basic Build System
 
 EBBS (or ebbs) is a framework for designing modular build pipelines for any language and system. Builders are python scripts that are downloaded and run on the fly with configuration provided by json config files, environment variables, and command line arguments!
 
@@ -35,6 +35,12 @@ For example, a well-designed project should allow you compile it locally by:
 cd build
 ebbs
 ```
+
+Per (eons)[https://github.com/eons-dev/lib_eons], ebbs supports:
+* `-v` or `--verbose` (count, i.e `-vv` = 2) or `--verbosity #`, where # is some number, or the `verbosity` environment or config value: will show more information and increase the logging level, e.g. print debug messages (3 for debug; 2 for info).
+* `--config` or `-c` (string): the path to a json config file from which other values may be retrieved.
+* `--no-repo` or the `no_repo` environment or config value (bool, i.e. 'True', 'true', etc.): whether or not to enable reaching out to online servers for code (see Dynamic Functionality, below).
+* `--log-file` or the `log_file` environment or config value (string; supports formatting, e.g. '/var/log/eons/{this.name}.log'): optional value for logging to a file in addition to stderr.
 
 As always, use `ebbs --help` for help ;)
 
