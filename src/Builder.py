@@ -106,24 +106,21 @@ class Builder(eons.StandardFunctor):
 		this.PopulatePaths(this.kwargs.pop("path"), this.kwargs.pop('build_in'))
 		this.PopulateLocalConfig()
 
+		details = os.path.basename(this.rootPath).split("_")
+		default_type = details[0]
+		default_name = default_type
+		if (len(details) > 1):
+			default_name = '_'.join(details[1:])
+
 		# This is messy because we can't query this.name or executor.name and need to get "name" from a config or arg val to set projectName.
 		for key, mem in this.configNameOverrides.items():
-			this.Set(key, this.FetchWithout(['this', 'executor', 'precursor'], key, default=this.executor.FetchWithout(['this'], key, default=None, start=False)))
-			if (getattr(this, mem) is None):
-				logging.warning(f"Not configured: {key}")
+			this.Set(key, this.FetchWithout(['this', 'executor', 'precursor'], key, default=this.executor.FetchWithout(['this'], key, default=eval(f"default_{key}"), start=False)[0]))
+			# if (getattr(this, mem) is None):
+			# 	logging.warning(f"Not configured: {key}")
 
 		# The clearBuildPath needs to be even more conserved than the configNameOverrides.
 		# The 'clear_build_path' key is required but must come from either an argument or the config.
 		this.clearBuildPath = this.Fetch('clear_build_path', False, ['args', 'config'])
-
-		details = os.path.basename(this.rootPath).split("_")
-		if (this.projectType is None):
-			this.projectType = details[0]
-		if (this.projectName is None):
-			if (len(details) > 1):
-				this.projectName = '_'.join(details[1:])
-			else:
-				this.projectName = eons.INVALID_NAME()
 
 
 	# When Fetching what to do next, we want either the executor's config or our config. Everything else will just muck things up.
