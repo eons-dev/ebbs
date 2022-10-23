@@ -311,21 +311,19 @@ For `supportedProjectTypes`, the `Builder` class will split the folder containin
 
 You'll also get the following paths variables populated by default:
 ```python
-this.buildPath = path #The one specified on the cli
-this.rootPath = os.path.abspath(os.path.join(this.buildPath, "../"))
-this.srcPath = os.path.abspath(os.path.join(this.buildPath, "../src"))
-this.incPath = os.path.abspath(os.path.join(this.buildPath, "../inc"))
-this.depPath = os.path.abspath(os.path.join(this.buildPath, "../dep"))
-this.libPath = os.path.abspath(os.path.join(this.buildPath, "../lib"))
-this.libPath = os.path.abspath(os.path.join(this.buildPath, "../bin"))
-this.testPath = os.path.abspath(os.path.join(this.buildPath, "../test"))
+this.srcPath = f"{this.rootPath}/src"
+this.incPath = f"{this.rootPath}/inc"
+this.depPath = f"{this.rootPath}/dep"
+this.libPath = f"{this.rootPath}/lib"
+this.libPath = f"{this.rootPath}/bin"
+this.testPath = f"{this.rootPath}/test"
 ```
 
 When a `Builder` is executed, the following are called in order:  
 (kwargs is the same for all)
 ```python
 this.ValidateArgs() # <- not recommended to override.
-this.PreCall() # <- virtual (ok to override)
+this.BeforeFunction() # <- virtual (ok to override)
 #Builder sets the above mentioned variables here
 this.PreBuild() # <- virtual (ok to override)
 #Supported project types are checked here
@@ -333,5 +331,5 @@ this.Build() # <- abstract method for you  (MUST override)
 this.PostBuild() # <- virtual (ok to override)
 if (this.DidBuildSucceed()):
     this.BuildNext()
-this.PostCall() # <- virtual (ok to override)
+this.AfterFunction() # <- virtual (ok to override)
 ```
