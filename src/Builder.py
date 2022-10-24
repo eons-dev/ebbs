@@ -125,7 +125,7 @@ class Builder(eons.StandardFunctor):
 
 	# When Fetching what to do next, we want either the executor's config or our config. Everything else will just muck things up.
 	def PopulateNext(this):
-		this.Set('next', this.Fetch('next', [], ['args', 'config']))
+		this.Set('next', this.Fetch('next', [], ['args', 'config']), evaluateExpressions=False)
 
 
 	# Override of eons.UserFunctor method. See that class for details.
