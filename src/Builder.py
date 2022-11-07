@@ -131,7 +131,10 @@ class Builder(eons.StandardFunctor):
 	# Override of eons.UserFunctor method. See that class for details.
 	def ParseInitialArgs(this):
 		super().ParseInitialArgs()
-		this.events = this.kwargs.pop('events')
+		if ('events' in this.kwargs):
+			this.events = this.kwargs.pop('events')
+		else:
+			logging.warning(f"{this.name} found no events.")
 		this.PopulateProjectDetails()
 
 
