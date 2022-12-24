@@ -30,7 +30,7 @@ class EBBS(eons.Executor):
 		super().Configure()
 
 		this.defaultConfigFile = "build.json"
-		this.defaultPrefix = "build"
+		this.defaultPackageType = "build"
 
 
 	#Override of eons.Executor method. See that class for details

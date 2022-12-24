@@ -79,7 +79,7 @@ All Builders are searched for in the local file system from where ebbs was calle
 "./eons" #per the eons.Executor.defaultRepoDirectory
 ```
 
-If the build you specified is not found within one of those directories, ebbs will try to download it from the remote repository with a name of `build_{builder}`. The downloaded build script will be saved to whatever directory you set in `--repo-store` (default "./eons/").
+If the build you specified is not found within one of those directories, ebbs will try to download it from the remote repository with a name of `{builder}.build`. The downloaded build script will be saved to whatever directory you set in `--repo-store` (default "./eons/").
 
 Unfortunately, python class names cannot have dashes ("-") in them. Instead, a series of underscores (`_`) is often used instead. While this deviates from the eons naming schema, it should still be intelligible for short names. You are, of course, welcome to use whatever naming scheme you would like instead!
 
@@ -117,8 +117,8 @@ It is also worth noting that the online repository system is handled upstream (a
 
 By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure) for more info.
 
-**IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be preceded by "build_" to be found by ebbs.  
-For example, if you want to use `-b my_build` from the repository, ebbs will attempt to download "build_my_build". The package zip is then downloaded, extracted, registered, and instantiated.  
+**IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be suffixed with the "build" extension to be found by ebbs.  
+For example, if you want to use `-b my_build` from the repository, ebbs will attempt to download "my_build.build". The package zip (my_build.build.zip) is then downloaded, extracted, registered, and instantiated.  
 All packages are .zip files.
 
 ### Example Build Scripts:
