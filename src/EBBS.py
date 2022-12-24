@@ -31,6 +31,7 @@ class EBBS(eons.Executor):
 
 		this.defaultConfigFile = "build.json"
 		this.defaultPackageType = "build"
+		this.defaultPrefix = "build" # DEPRECATED
 
 
 	#Override of eons.Executor method. See that class for details
