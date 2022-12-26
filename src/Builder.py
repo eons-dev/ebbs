@@ -9,7 +9,7 @@ class Builder(eons.StandardFunctor):
 	def __init__(this, name=eons.INVALID_NAME()):
 		super().__init__(name)
 
-		# What can this build, "bin", "lib", "img", ... ?
+		# What can this build, "exe", "lib", "img", ... ?
 		this.supportedProjectTypes = []
 
 		this.projectType = None
@@ -74,7 +74,7 @@ class Builder(eons.StandardFunctor):
 			"inc",
 			"dep",
 			"lib",
-			"bin",
+			"exe",
 			"test"
 		]
 		for path in paths:

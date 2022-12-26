@@ -20,7 +20,7 @@ Ebbs has been written in adherence to the [eons naming conventions](https://eons
   {"../include" : "inc"}
 ]
 ```
-In the same fashion, you can bypass the eons directory scheme ("bin_my-project", "lib_my-project", "img_my-project", etc.) by specifying `"name" : "my-project"` and `"type" : "bin"` or whatever you'd like.
+In the same fashion, you can bypass the eons directory scheme ("my_project.exe", "my_project.lib", "my_project.img", etc.) by specifying `"name" : "my_project"` and `"type" : "exe"` or whatever you'd like.
 
 If you find ebbs to be getting in the way or overly challenging, let us know! Seriously, building code should be easy and we're always happy to know how we can improve. Feel free to open issues or just email us at support@eons.llc.
 
@@ -36,7 +36,7 @@ cd build
 ebbs
 ```
 
-Per (eons)[https://github.com/eons-dev/lib_eons], ebbs supports:
+Per (eons)[https://github.com/eons-dev/eons.lib], ebbs supports:
 * `-v` or `--verbose` (count, i.e `-vv` = 2) or `--verbosity #`, where # is some number, or the `verbosity` environment or config value: will show more information and increase the logging level, e.g. print debug messages (3 for debug; 2 for info).
 * `--config` or `-c` (string): the path to a json config file from which other values may be retrieved.
 * `--no-repo` or the `no_repo` environment or config value (bool, i.e. 'True', 'true', etc.): whether or not to enable reaching out to online servers for code (see Dynamic Functionality, below).
@@ -88,13 +88,13 @@ Unfortunately, python class names cannot have dashes ("-") in them. Instead, a s
 As mentioned, ebbs depends on the directory it is invoked from. The `rootPath` provided to each Builder will be this directory. The `buildPath` is specified relative to the `rootPath`. If you would like to use a single folder for all Builders, please set the `repo_store` environment variable with an absolute path.
 
 For example, if you have a "git" and a "workspace" folder in your home directory and you want to use your custom Builder, "my_build" on all the projects in the git folder, instead of copying my_build to every project's workspace, you could simply `export repo_store="~/workspace"` and call ebbs from the appropriate build directory for each project.
-Something like: `me@mine:~/git/bin_my-cpp-project/build$ ebbs -b my_build`. NOTE: if the build.json file `~/git/bin_my-cpp-project/build/build.json` exists, it will affect the behavior of `my_build` and potentially even effect other Builders. To ensure no side-effects are generated from project build configurations, you should create an empty folder to invoke your custom build process from (e.g `local/`).
+Something like: `me@mine:~/git/my_cpp_project.exe/build$ ebbs -b my_build`. NOTE: if the build.json file `~/git/my_cpp_project.exe/build/build.json` exists, it will affect the behavior of `my_build` and potentially even effect other Builders. To ensure no side-effects are generated from project build configurations, you should create an empty folder to invoke your custom build process from (e.g `local/`).
 
 Your home folder would then look something like:
 ```
 home/
 ├─ git/
-│  ├─ bin_my-cpp-project/
+│  ├─ my_cpp_project.exe/
 ├─ workspace/
 │  ├─ my_build.py
 ```
@@ -115,7 +115,7 @@ For more info on the repo integration, see [the eons library](https://github.com
 
 It is also worth noting that the online repository system is handled upstream (and downstream, for Publish) of ebbs.
 
-By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure) for more info.
+By default, ebbs will use the [infrastructure.tech](https://infrastructure.tech) package repository. See the [Infrastructure web server](https://github.com/infrastructure-tech/infrastructure.srv) for more info.
 
 **IMPORTANT CAVEAT FOR ONLINE PACKAGES:** the package name must be suffixed with the "build" extension to be found by ebbs.  
 For example, if you want to use `-b my_build` from the repository, ebbs will attempt to download "my_build.build". The package zip (my_build.build.zip) is then downloaded, extracted, registered, and instantiated.  
@@ -123,20 +123,20 @@ All packages are .zip files.
 
 ### Example Build Scripts:
 
-* [Python](https://github.com/eons-dev/build_py)
-* [C++](https://github.com/eons-dev/build_cpp)
-* [Docker](https://github.com/eons-dev/build_docker)
-* [Publish](https://github.com/eons-dev/build_publish) <- this one makes other Builders available online.
-* [In Container](https://github.com/eons-dev/build_in_container) <- this one moves the remaining build process into a docker container.
-* [Arbitrary](https://github.com/eons-dev/build_arbitrary) <- this one just runs commands.
-* [Proxy](https://github.com/eons-dev/build_proxy) <- this one loads another json config file.
-* [Test](https://github.com/eons-dev/build_test) <- this one runs commands and validates the outputs.
+* [Python](https://github.com/eons-dev/py.build)
+* [C++](https://github.com/eons-dev/cpp.build)
+* [Docker](https://github.com/eons-dev/docker.build)
+* [Publish](https://github.com/eons-dev/publish.build) <- this one makes other Builders available online.
+* [In Container](https://github.com/eons-dev/in_container.build) <- this one moves the remaining build process into a docker container.
+* [Arbitrary](https://github.com/eons-dev/arbitrary.build) <- this one just runs commands.
+* [Proxy](https://github.com/eons-dev/proxy.build) <- this one loads another json config file.
+* [Test](https://github.com/eons-dev/test.build) <- this one runs commands and validates the outputs.
 
 ### Cascading Builds
 
 As with any good build system, you aren't limited to just one step or even one file. With ebbs, you can specify "next" in your build.json (see below), which will execute a series of Builders after the initial.
 
-Here's an example build.json that builds a C++ project then pushes it to Dockerhub (taken from the [Infrastructure web server](https://github.com/infrastructure-tech/srv_infrastructure)):
+Here's an example build.json that builds a C++ project then pushes it to Dockerhub (taken from the [Infrastructure web server](https://github.com/infrastructure-tech/infrastructure.srv)):
 ```json
 {
   "clear_build_path" : true,
@@ -144,7 +144,7 @@ Here's an example build.json that builds a C++ project then pushes it to Dockerh
 	{
 	  "build" : "in_container",
 	  "config" : {
-		"image" : "eons/img_dev-webserver",
+		"image" : "eons/dev-webserver.img",
 		"copy_env" : [
 		  "docker_username",
 		  "docker_password"
@@ -167,13 +167,13 @@ Here's an example build.json that builds a C++ project then pushes it to Dockerh
               "next" : [
                 {
                   "build": "docker",
-                  "path" : "srv_infrastructure",
+                  "path" : "infrastructure.srv",
                   "copy" : [
                     {"out/" : "src/"}
                   ],
                   "config" : {
-                    "base_image" : "eons/img_webserver",
-                    "image_name" : "eons/srv_infrastructure",
+                    "base_image" : "eons/webserver.img",
+                    "image_name" : "eons/infrastructure.srv",
                     "image_os" : "debian",
                     "entrypoint" : "/usr/local/bin/entrypoint",
                     "also" : [
@@ -198,8 +198,8 @@ For other examples, check out the `build` folder of this repo and any other ment
 
 ### I Want One!
 
-Before diving too deep into EBBS, please also give a quick look at the parent library: [eons](https://github.com/eons-dev/lib_eons).
-The [UserFunctor Utilities](https://github.com/eons-dev/lib_eons#user-functor) will be of particular use in your Builders.
+Before diving too deep into EBBS, please also give a quick look at the parent library: [eons](https://github.com/eons-dev/eons.lib).
+The [UserFunctor Utilities](https://github.com/eons-dev/eons.lib#user-functor) will be of particular use in your Builders.
 
 Ebbs builds packages or whatever with `ebbs.Builders`, which extend the self-registering `eons.UserFunctor`. This means you can write your own build scripts and publish them, distribute them with your code, or store them locally in the `repo_store` (see above). A major driving force behind ebbs is to encourage you to share your automation tools with colleagues, friends, and enemies! For example, you could create "my_build.py", containing something like:
 ```python
@@ -216,7 +216,7 @@ class my_build(Builder):
         this.supportedProjectTypes = [] #all
         #or
         # this.supportedProjectTypes.append("lib")
-        # this.supportedProjectTypes.append("bin")
+        # this.supportedProjectTypes.append("exe")
         # this.supportedProjectTypes.append("test")
         
         #this.requiredKWArgs will cause an error to be thrown prior to execution (i.e. .*Build methods) iff they are not found in the system environment, build.json, nor command line.
@@ -238,9 +238,9 @@ class my_build(Builder):
         #DO STUFF!
 ```
 That file can then go in a "./ebbs/" or "./eons/" directory, perhaps within your project repository or on [infrastructure.tech](https://infrastructure.tech)!
-ebbs can then be invoked with something like: `ebbs -b my_build --my_required_arg my-value`, which will run your Builder in the current path!
+ebbs can then be invoked with something like: `ebbs -b my_build --my-required-arg my-value`, which will run your Builder in the current path!
 
-Also note the "--" preceding "--my_required_arg", which evaluates to just "my_required_arg" (without the "--") once in the Builder. This is done for convenience of both command line syntax and python code.
+Also note the "--" preceding "--my-required-arg", which evaluates to "my_required_arg" (without the "--" and with "_" in place of "-") once in the Builder. This is done for convenience of both command line syntax and python code.
 
 You could also do something like:
 ```shell
@@ -315,7 +315,7 @@ this.srcPath = f"{this.rootPath}/src"
 this.incPath = f"{this.rootPath}/inc"
 this.depPath = f"{this.rootPath}/dep"
 this.libPath = f"{this.rootPath}/lib"
-this.libPath = f"{this.rootPath}/bin"
+this.exePath = f"{this.rootPath}/exe"
 this.testPath = f"{this.rootPath}/test"
 ```
 
