@@ -16,6 +16,8 @@ class Builder(eons.StandardFunctor):
 		this.projectName = None
 		this.clearBuildPath = False
 
+		this.fetchFrom.remove('globals')
+
 		this.configNameOverrides = {
 			"name": "projectName",
 			"type": "projectType",
@@ -106,15 +108,15 @@ class Builder(eons.StandardFunctor):
 		this.PopulatePaths(this.kwargs.pop("path"), this.kwargs.pop('build_in'))
 		this.PopulateLocalConfig()
 
-		details = os.path.basename(this.rootPath).split("_")
-		default_type = details[0]
+		details = os.path.basename(this.rootPath).split(".")
+		default_type = details[-1]
 		default_name = default_type
 		if (len(details) > 1):
-			default_name = '_'.join(details[1:])
+			default_name = '.'.join(details[:-1])
 
 		# This is messy because we can't query this.name or executor.name and need to get "name" from a config or arg val to set projectName.
 		for key, mem in this.configNameOverrides.items():
-			this.Set(key, this.FetchWithout(['this', 'executor', 'precursor'], key, default=this.executor.FetchWithout(['this'], key, default=eval(f"default_{key}"), start=False)[0]))
+			this.Set(key, this.FetchWithout(['this', 'executor', 'precursor', 'globals'], key, default=this.executor.FetchWithout(['this', 'globals'], key, default=eval(f"default_{key}"), start=False)[0]))
 			# if (getattr(this, mem) is None):
 			# 	logging.warning(f"Not configured: {key}")
 
@@ -141,7 +143,7 @@ class Builder(eons.StandardFunctor):
 	# RETURNS whether or not we should trigger the next Builder based on what events invoked ebbs.
 	# Anything in the "run_when_any" list will require a corresponding --event specification to run.
 	# For example "run_when_any":["publish"] would require `--event publish` to enable publication Builders in the workflow.
-	def ValidateNext(this, nextBuilder):
+	def ValidateNext(this, nextBuilder):		
 		if ("run_when_none" in nextBuilder):
 			if ([r for r in nextBuilder["run_when_none"] if r in this.events]):
 				logging.info(f"Skipping next builder: {nextBuilder['build']}; prohibitive events found (cannot have any of {nextBuilder['run_when_none']} and have {this.events})")
@@ -175,7 +177,9 @@ class Builder(eons.StandardFunctor):
 		logging.debug(f"Next build path is: {nextPath}")
 
 		if ("copy" in nextBuilder):
-			for cpy in nextBuilder["copy"]:
+			# dict() is necessary to strip off any wrappers, like DotDict, etc.
+			# otherwise getattr(nextBuilder, 'copy') gives the built in copy method...
+			for cpy in dict(nextBuilder)["copy"]:
 				# logging.debug(f"copying: {cpy}")
 				for src, dst in cpy.items():
 					this.Copy(src, dst, root=this.executor.rootPath)
@@ -189,7 +193,7 @@ class Builder(eons.StandardFunctor):
 					val = getattr(this, var)
 					logging.debug(f"Adding to config: {key} = {val}")
 					nextBuilder["config"][key] = val
-			nextConfig.write(jsonpickle.encode(nextBuilder["config"]))
+			nextConfig.write(jsonpickle.encode(dict(nextBuilder["config"])))
 			nextConfig.close()
 
 		logging.debug(f">---- Completed preparation for: {nextBuilder['build']} ----<")
