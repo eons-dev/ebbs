@@ -70,7 +70,13 @@ class EBBS(eons.Executor):
 	#Override of eons.Executor method. See that class for details
 	def Function(this):
 		super().Function()
-		build_in = this.Fetch('build_in', default="build")
+		
+		build_in = None
+		if ('build_in' in this.extraArgs):
+			build_in = this.extraArgs.pop('build_in')
+		else:
+			build_in = this.Fetch('build_in', default="build")
+		
 		if (not this.Build(this.parsedArgs.builder, this.parsedArgs.path, build_in, this.events, **this.extraArgs)):
 			logging.critical("Build failed.")
 
