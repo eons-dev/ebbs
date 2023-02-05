@@ -16,7 +16,10 @@ class Builder(eons.StandardFunctor):
 		this.projectName = None
 		this.clearBuildPath = False
 
-		this.fetchFrom.remove('globals')
+		try:
+			this.fetchFrom.remove('globals')
+		except:
+			pass
 
 		this.configNameOverrides = {
 			"name": "projectName",
