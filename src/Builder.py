@@ -93,6 +93,11 @@ class Builder(eons.StandardFunctor):
 
 	# Populate the configuration details for *this.
 	def PopulateLocalConfig(this, configName="build.json"):
+		if (not Path(configName).exists() and this.executor and not this.precursor):
+			this.config = this.executor.config
+			logging.debug(f"Using executor config: {this.config}")
+			return
+
 		this.config = None
 		localConfigFile = os.path.join(this.rootPath, configName)
 		logging.debug(f"Looking for local configuration: {localConfigFile}")

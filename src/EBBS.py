@@ -29,7 +29,7 @@ class EBBS(eons.Executor):
 	def Configure(this):
 		super().Configure()
 
-		this.defaultConfigFile = "build.json"
+		this.defaultConfigFile = "build"
 		this.defaultPackageType = "build"
 		this.defaultPrefix = "build" # DEPRECATED
 
