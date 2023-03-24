@@ -138,7 +138,7 @@ class Builder(eons.StandardFunctor):
 		this.Set('next', this.Fetch('next', [], ['args', 'config']), evaluateExpressions=False)
 
 
-	# Override of eons.UserFunctor method. See that class for details.
+	# Override of eons.Functor method. See that class for details.
 	def ParseInitialArgs(this):
 		super().ParseInitialArgs()
 		if ('events' in this.kwargs):

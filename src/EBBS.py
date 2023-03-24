@@ -6,9 +6,8 @@ from .Exceptions import *
 
 class EBBS(eons.Executor):
 
-	def __init__(this):
-		super().__init__(name="Eons Basic Build System", descriptionStr="A hackable build system for all builds!")
-
+	def __init__(this, name="Eons Basic Build System", descriptionStr="A hackable build system for all builds!"):
+		super().__init__(name, descriptionStr)
 		# this.RegisterDirectory("ebbs")
 
 
