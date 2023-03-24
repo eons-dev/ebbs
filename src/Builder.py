@@ -99,6 +99,8 @@ class Builder(eons.StandardFunctor):
 					if (Path(f"build.{ext}").exists()):
 						configName = f"build.{ext}"
 						break
+			else:
+				configName = "build.json"
 				
 		if (not Path(configName).exists() and this.executor and not this.precursor):
 			this.config = this.executor.config
