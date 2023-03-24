@@ -92,7 +92,14 @@ class Builder(eons.StandardFunctor):
 
 
 	# Populate the configuration details for *this.
-	def PopulateLocalConfig(this, configName="build.json"):
+	def PopulateLocalConfig(this, configName=None):
+		if (not configName):
+			if (this.executor):
+				for ext in this.executor.configFileExtensions:
+					if (Path(f"build.{ext}").exists()):
+						configName = f"build.{ext}"
+						break
+				
 		if (not Path(configName).exists() and this.executor and not this.precursor):
 			this.config = this.executor.config
 			logging.debug(f"Using executor config: {this.config}")
@@ -103,7 +110,7 @@ class Builder(eons.StandardFunctor):
 		logging.debug(f"Looking for local configuration: {localConfigFile}")
 		if (os.path.isfile(localConfigFile)):
 			configFile = open(localConfigFile, "r")
-			this.config = jsonpickle.decode(configFile.read())
+			this.config = yaml.safe_load(configFile.read().replace('\t', '  '))
 			configFile.close()
 			logging.debug(f"Got local config contents: {this.config}")
 
