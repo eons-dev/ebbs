@@ -11,6 +11,7 @@
 		"package_url" : "https://github.com/eons-dev/bin_ebbs",
 		"license" : "MIT License",
 		"python_min" : "3.7",
+		"skip_module_detection" : ["yaml"],
 		"classifiers" : [
 		  "Development Status :: 4 - Beta"
 		],
