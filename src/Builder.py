@@ -103,7 +103,7 @@ class Builder(eons.StandardFunctor):
 			else:
 				configName = "build.json"
 				
-		if (not Path(configName).exists() and this.executor and not this.precursor):
+		if (not configName or not Path(configName).exists() and this.executor and not this.precursor):
 			this.config = this.executor.config
 			logging.debug(f"Using executor config: {this.config}")
 			return
