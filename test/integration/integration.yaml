@@ -1,0 +1,12 @@
+next:
+- build: test_case
+  config:
+    assertions:
+    - kind: command
+      check: output
+      command: ebbs -b py_package -v
+      expected: [
+        'lib',
+        ''
+      ]
+      comparator: eq

@@ -1,0 +1,30 @@
+next:
+- run_when_any:
+  - push
+  - pull_request
+  - release
+  build: proxy
+  build_in: bin_ebbs
+  copy:
+  - "../../../src/": bin_ebbs/src/
+  - "../../../inc/": bin_ebbs/inc/
+  - "../../../test/": bin_ebbs/test/
+  - "../../../README.md": bin_ebbs/README.md
+  - "../../../LICENSE": bin_ebbs/LICENSE
+  config:
+    clear_build_path: false
+    proxy: "../../config/local.yaml"
+    next:
+    - run_when_any:
+      - release
+      build: py_publish
+      build_in: "./"
+      config:
+        clear_build_path: false
+- run_when_any:
+  - schedule
+  build: proxy
+  build_in: "./"
+  config:
+    clear_build_path: false
+    proxy: "../../config/schedule.yaml"
