@@ -1,5 +1,5 @@
 name: ebbs
-type: bin
+type: exe
 clear_build_path: true
 build_in: tmp
 next:

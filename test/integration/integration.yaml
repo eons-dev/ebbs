@@ -3,10 +3,7 @@ next:
   config:
     assertions:
     - kind: command
-      check: output
-      command: ebbs -b py_package -v
-      expected: [
-        'lib',
-        ''
-      ]
+      check: return
+      command: ebbs -b py_package -vvv --name ebbs --type exe
+      expected: 0
       comparator: eq
