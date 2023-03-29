@@ -24,12 +24,12 @@ next:
       build_in: "../"
       config: {}
 - build: test
-  build_in: "test"
+  build_in: test
   copy:
-  - "/src": "test/integration/src/"
-  - "/inc": "test/integration/inc/"
-  - "/README.md": "test/integration/README.md"
-  - "/LICENSE": "test/integration/LICENSE"
+  - "/src": "test/integration/build/ebbs/src/"
+  - "/inc": "test/integration/build/ebbs/inc/"
+  - "/README.md": "test/integration/build/ebbs/README.md"
+  - "/LICENSE": "test/integration/build/ebbs/LICENSE"
   config:
     test_path: "integration"
     test_fixture: integration.yaml
