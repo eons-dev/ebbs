@@ -1,0 +1,10 @@
+next:
+- build: test_case
+  build_in: ebbs
+  config:
+    assertions:
+    - kind: command
+      check: return
+      command: ebbs -b py_package --build-in . -vvv --name ebbs --type exe --skip-module-detection '["yaml"]'
+      expected: 0
+      comparator: eq
