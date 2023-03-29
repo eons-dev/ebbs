@@ -5,12 +5,6 @@ next:
   - release
   build: proxy
   build_in: bin_ebbs
-  copy:
-  - "../../../src/": bin_ebbs/src/
-  - "../../../inc/": bin_ebbs/inc/
-  - "../../../test/": bin_ebbs/test/
-  - "../../../README.md": bin_ebbs/README.md
-  - "../../../LICENSE": bin_ebbs/LICENSE
   config:
     clear_build_path: false
     proxy: "../../config/local.yaml"
