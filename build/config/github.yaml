@@ -1,17 +1,17 @@
 next:
 - run_when_any:
-  - push
-  - pull_request
-  - release
-  build: proxy
-  build_in: bin_ebbs
-  config:
-    clear_build_path: false
-    proxy: "../../config/local.yaml"
+	- push
+	- pull_request
+	- release
+	build: proxy
+	build_in: bin_ebbs
+	config:
+		clear_build_path: false
+		proxy: "../../config/local.yaml"
 - run_when_any:
-  - schedule
-  build: proxy
-  build_in: "./"
-  config:
-    clear_build_path: false
-    proxy: "../../config/schedule.yaml"
+	- schedule
+	build: proxy
+	build_in: "./"
+	config:
+		clear_build_path: false
+		proxy: "../../config/schedule.yaml"

@@ -207,7 +207,7 @@ class Builder(eons.StandardFunctor):
 				for src, dst in cpy.items():
 					this.Copy(src, dst, root=this.executor.rootPath)
 
-		if ("config" in nextBuilder):
+		if ("config" in nextBuilder and nextBuilder["config"]):
 			nextConfigFile = os.path.join(nextPath, "build.json")
 			logging.debug(f"writing: {nextConfigFile}")
 			nextConfig = open(nextConfigFile, "w")
