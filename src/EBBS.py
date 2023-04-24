@@ -10,6 +10,8 @@ class EBBS(eons.Executor):
 		super().__init__(name, descriptionStr)
 		# this.RegisterDirectory("ebbs")
 
+		this.defaultBuildIn = "build"
+
 
 	# Register included files early so that they can be used by the rest of the system.
 	# If we don't do this, we risk hitting infinite loops because modular functionality relies on these modules.
@@ -53,6 +55,11 @@ class EBBS(eons.Executor):
 		this.parsedArgs.path = os.getcwd() #used to be arg; now we hard code
 		this.rootPath = str(Path(this.parsedArgs.path).resolve())
 
+		if ('build_in' in this.extraArgs):
+			this.defaultBuildIn = this.extraArgs.pop('build_in')
+		else:
+			this.defaultBuildIn = this.Fetch('build_in', default="build")
+
 		this.events = set()
 		if (this.parsedArgs.events is not None):
 			[[this.events.add(str(e)) for e in l] for l in this.parsedArgs.events]
@@ -61,22 +68,20 @@ class EBBS(eons.Executor):
 				logging.debug("No build specified. Assuming build pipeline is written in config.")
 
 
+	def WarmUpFlow(this, flow):
+		flow.WarmUp(this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
+
+
 	#Override of eons.Executor method. See that class for details
 	def InitData(this):
-		this.rootPath = Path(this.Fetch('path', default='../')).resolve() #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
+		this.rootPath = Path(this.FetchWithout(['environment'], 'path', default='../')).resolve() #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
 
 
 	#Override of eons.Executor method. See that class for details
 	def Function(this):
 		super().Function()
-		
-		build_in = None
-		if ('build_in' in this.extraArgs):
-			build_in = this.extraArgs.pop('build_in')
-		else:
-			build_in = this.Fetch('build_in', default="build")
-		
-		if (not this.Build(this.parsedArgs.builder, this.parsedArgs.path, build_in, this.events, **this.extraArgs)):
+				
+		if (not this.Build(this.parsedArgs.builder, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)):
 			logging.critical("Build failed.")
 
 

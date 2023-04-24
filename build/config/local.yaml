@@ -1,0 +1,37 @@
+name: ebbs
+type: exe
+next:
+- build: py_package
+  build_in: pkg
+  copy:
+  - "/src/": "src/"
+  - "/inc/": "inc/"
+  - "/test/": "test/"
+  - "/README.md": "README.md"
+  - "/LICENSE": "LICENSE"
+  config:
+    clear_build_path: false
+    author_name: eons
+    author_email: support@eons.llc
+    description: eons Basic Build System
+    package_url: https://github.com/eons-dev/bin_ebbs
+    license: MIT License
+    python_min: '3.7'
+    skip_module_detection:
+    - yaml
+    classifiers:
+    - 'Development Status :: 4 - Beta'
+    next:
+    - build: py_install
+      build_in: "../"
+      config: {}
+- build: test
+  build_in: test
+  copy:
+  - "/src": "test/integration/build/ebbs/src/"
+  - "/inc": "test/integration/build/ebbs/inc/"
+  - "/README.md": "test/integration/build/ebbs/README.md"
+  - "/LICENSE": "test/integration/build/ebbs/LICENSE"
+  config:
+    test_path: "integration"
+    test_fixture: integration.yaml
