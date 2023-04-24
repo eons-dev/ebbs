@@ -10,9 +10,6 @@ class EBBS(eons.Executor):
 		super().__init__(name, descriptionStr)
 		# this.RegisterDirectory("ebbs")
 
-		this.defaultBuildIn = "build"
-
-
 	# Register included files early so that they can be used by the rest of the system.
 	# If we don't do this, we risk hitting infinite loops because modular functionality relies on these modules.
 	# NOTE: this method needs to be overridden in all children which ship included Functors, Data, etc. This is because __file__ is unique to the eons.py file, not the child's location.
@@ -30,6 +27,7 @@ class EBBS(eons.Executor):
 	def Configure(this):
 		super().Configure()
 
+		this.defaultBuildIn = "build"
 		this.defaultConfigFile = "build"
 		this.defaultPackageType = "build"
 		this.defaultPrefix = "build" # DEPRECATED
@@ -55,11 +53,6 @@ class EBBS(eons.Executor):
 		this.parsedArgs.path = os.getcwd() #used to be arg; now we hard code
 		this.rootPath = str(Path(this.parsedArgs.path).resolve())
 
-		if ('build_in' in this.extraArgs):
-			this.defaultBuildIn = this.extraArgs.pop('build_in')
-		else:
-			this.defaultBuildIn = this.Fetch('build_in', default="build")
-
 		this.events = set()
 		if (this.parsedArgs.events is not None):
 			[[this.events.add(str(e)) for e in l] for l in this.parsedArgs.events]
@@ -74,6 +67,11 @@ class EBBS(eons.Executor):
 
 	#Override of eons.Executor method. See that class for details
 	def InitData(this):
+		if ('build_in' in this.extraArgs):
+			this.defaultBuildIn = this.extraArgs.pop('build_in')
+		else:
+			this.defaultBuildIn = this.Fetch('build_in', default="build")
+	
 		this.rootPath = Path(this.FetchWithout(['environment'], 'path', default='../')).resolve() #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
 
 
