@@ -1,5 +1,3 @@
-name: ebbs
-type: exe
 next:
 - build: py_package
   build_in: pkg
@@ -14,7 +12,7 @@ next:
     author_name: eons
     author_email: support@eons.llc
     description: eons Basic Build System
-    package_url: https://github.com/eons-dev/bin_ebbs
+    package_url: https://github.com/eons-dev/ebbs.exe
     license: MIT License
     python_min: '3.7'
     skip_module_detection:
