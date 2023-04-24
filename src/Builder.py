@@ -102,11 +102,16 @@ class Builder(eons.StandardFunctor):
 						break
 			else:
 				configName = "build.json"
-				
-		if (not configName or not Path(configName).exists() and this.executor and not this.precursor):
-			this.config = this.executor.config
-			logging.debug(f"Using executor config: {this.config}")
-			return
+		
+		if (not configName or not Path(configName).exists()):
+			if (this.executor and not this.precursor):
+				this.config = this.executor.config
+				logging.debug(f"Using executor config: {this.config}")
+				return
+			else:
+				logging.info(f"Could not find a configuration file for {this.name}")
+				this.config = {} # safer than n
+				return
 
 		this.config = None
 		localConfigFile = os.path.join(this.rootPath, configName)
