@@ -79,9 +79,7 @@ class EBBS(eons.Executor):
 	def Function(this):
 		super().Function()
 				
-		if (not this.Build(this.parsedArgs.builder, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)):
-			logging.critical("Build failed.")
-
+		return this.Build(this.parsedArgs.builder, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
 
 	#Run a build script.
 	#RETURNS whether or not the build was successful.

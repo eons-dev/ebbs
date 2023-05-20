@@ -27,6 +27,7 @@ class Builder(eons.StandardFunctor):
 			"type": "projectType",
 		}
 
+		this.functionSucceeded = True
 		this.enableRollback = False
 
 		this.events = []
@@ -42,7 +43,7 @@ class Builder(eons.StandardFunctor):
 	# Override this to perform whatever success checks are necessary.
 	# This will be called before running the next build step.
 	def DidBuildSucceed(this):
-		return True
+		return this.functionSucceeded
 
 
 	# API compatibility shim
@@ -230,7 +231,7 @@ class Builder(eons.StandardFunctor):
 		if (this.next is None):
 			return None
 
-		ret = True
+		ret = None
 		for nxt in this.next:
 			if (not this.ValidateNext(nxt)):
 				continue
@@ -244,11 +245,6 @@ class Builder(eons.StandardFunctor):
 				build_in=buildFolder,
 				events=this.events,
 				precursor=this)
-			if (not ret):
-				ret = False
-				if ('tolerate_failure' not in nxt or not nxt['tolerate_failure']):
-					logging.error(f"Building {nxt['build']} failed. Aborting.")
-					return ret
 		return ret
 
 
@@ -279,7 +275,8 @@ class Builder(eons.StandardFunctor):
 		logging.info(f"Using {this.name} to build \"{this.projectName}\", a \"{this.projectType}\" in {this.buildPath}")
 
 		logging.debug(f"<---- Building {this.name} ---->")
-		this.Build()
+		ret = this.Build()
 		logging.debug(f">---- Done Building {this.name} ----<")
 
 		this.PostBuild()
+		return ret
