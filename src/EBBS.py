@@ -62,7 +62,7 @@ class EBBS(eons.Executor):
 
 
 	def WarmUpFlow(this, flow):
-		flow.WarmUp(this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
+		flow.WarmUp(executor=this, path=this.parsedArgs.path, build_in=this.defaultBuildIn, events=this.events, **this.extraArgs)
 
 
 	#Override of eons.Executor method. See that class for details

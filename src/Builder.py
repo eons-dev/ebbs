@@ -64,8 +64,21 @@ class Builder(eons.StandardFunctor):
 	# Sets the build path that should be used by children of *this.
 	# Also sets src, inc, lib, and dep paths, if they are present.
 	def PopulatePaths(this, rootPath, buildFolder):
+		paths = [
+			"src",
+			"inc",
+			"dep",
+			"lib",
+			"exe",
+			"test"
+		]
+
 		if (rootPath is None):
-			logging.warning("no \"dir\" supplied. buildPath is None")
+			logging.warning("no \"dir\" supplied. Paths unavailable.")
+			this.rootPath = ""
+			this.buildPath = ""
+			for path in paths:
+				setattr(this, f"{path}Path", None)
 			return
 
 		this.rootPath = str(Path(rootPath).resolve())
@@ -76,14 +89,6 @@ class Builder(eons.StandardFunctor):
 
 		logging.debug(f"buildPath for {this.name} is {this.buildPath}")
 
-		paths = [
-			"src",
-			"inc",
-			"dep",
-			"lib",
-			"exe",
-			"test"
-		]
 		for path in paths:
 			tmpPath = os.path.abspath(os.path.join(this.rootPath, path))
 			if (os.path.isdir(tmpPath)):
@@ -129,8 +134,12 @@ class Builder(eons.StandardFunctor):
 	# For information on how projects should be labelled see: https://eons.llc/convention/naming/
 	# For information on how projects should be organized, see: https://eons.llc/convention/uri-names/
 	def PopulateProjectDetails(this):
-		this.PopulatePaths(this.kwargs.pop("path"), this.kwargs.pop('build_in'))
-		this.PopulateLocalConfig()
+		if ('path' in this.kwargs and 'build_in' in this.kwargs):
+			this.PopulatePaths(this.kwargs.pop('path'), this.kwargs.pop('build_in'))
+			this.PopulateLocalConfig()
+		else:
+			this.PopulatePaths(None, None)
+			this.config = None
 
 		details = os.path.basename(this.rootPath).split(".")
 		default_type = details[-1]
@@ -272,7 +281,12 @@ class Builder(eons.StandardFunctor):
 
 		logging.debug(f">---- Done Preparing {this.name} ----<")
 
-		logging.info(f"Using {this.name} to build \"{this.projectName}\", a \"{this.projectType}\" in {this.buildPath}")
+		runMessage = f"Building {this.name}"
+		if (len(this.projectName)):
+			runMessage += f"for \"{this.projectName}\", a \"{this.projectType}\""
+		if (len(this.buildPath)):
+			runMessage += f"in {this.buildPath}"
+		logging.info(runMessage)
 
 		logging.debug(f"<---- Building {this.name} ---->")
 		ret = this.Build()
