@@ -75,8 +75,8 @@ class Builder(eons.StandardFunctor):
 
 		if (rootPath is None):
 			logging.warning("no \"dir\" supplied. Paths unavailable.")
-			this.rootPath = ""
-			this.buildPath = ""
+			this.rootPath = None
+			this.buildPath = None
 			for path in paths:
 				setattr(this, f"{path}Path", None)
 			return
@@ -137,11 +137,12 @@ class Builder(eons.StandardFunctor):
 		if ('path' in this.kwargs and 'build_in' in this.kwargs):
 			this.PopulatePaths(this.kwargs.pop('path'), this.kwargs.pop('build_in'))
 			this.PopulateLocalConfig()
+			details = os.path.basename(this.rootPath).split(".")
 		else:
 			this.PopulatePaths(None, None)
 			this.config = None
+			details = [this.name]
 
-		details = os.path.basename(this.rootPath).split(".")
 		default_type = details[-1]
 		default_name = default_type
 		if (len(details) > 1):
@@ -198,6 +199,9 @@ class Builder(eons.StandardFunctor):
 	# Creates the folder structure for the next build step.
 	# RETURNS the next buildPath.
 	def PrepareNext(this, nextBuilder):
+		if (not this.buildPath):
+			return None
+
 		logging.debug(f"<---- Preparing for next builder: {nextBuilder['build']} ---->")
 		# logging.debug(f"Preparing for next builder: {nextBuilder}")
 
@@ -266,12 +270,13 @@ class Builder(eons.StandardFunctor):
 	def Function(this):
 		logging.debug(f"<---- Preparing {this.name} ---->")
 
-		if (this.clearBuildPath):
-			this.Delete(this.buildPath)
+		if (this.buildPath):
+			if (this.clearBuildPath):
+				this.Delete(this.buildPath)
 
-		# mkpath(this.buildPath) <- This just straight up doesn't work. Race condition???
-		Path(this.buildPath).mkdir(parents=True, exist_ok=True)
-		os.chdir(this.buildPath)
+			# mkpath(this.buildPath) <- This just straight up doesn't work. Race condition???
+			Path(this.buildPath).mkdir(parents=True, exist_ok=True)
+			os.chdir(this.buildPath)
 
 		this.PreBuild()
 
@@ -282,9 +287,11 @@ class Builder(eons.StandardFunctor):
 		logging.debug(f">---- Done Preparing {this.name} ----<")
 
 		runMessage = f"Building {this.name}"
-		if (len(this.projectName)):
-			runMessage += f"for \"{this.projectName}\", a \"{this.projectType}\""
-		if (len(this.buildPath)):
+		if (this.projectName):
+			runMessage += f" for \"{this.projectName}\""
+		if (this.projectType != this.projectName):
+			runMessage += ", a \"{this.projectType}\""
+		if (this.buildPath):
 			runMessage += f"in {this.buildPath}"
 		logging.info(runMessage)
 
