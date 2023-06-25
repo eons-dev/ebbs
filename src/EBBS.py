@@ -28,7 +28,7 @@ class EBBS(eons.Executor):
 		super().Configure()
 
 		this.defaultBuildIn = "build"
-		this.defaultConfigFile = "build"
+		this.defaultConfigFile = "config"
 		this.defaultPackageType = "build"
 		this.defaultPrefix = "build" # DEPRECATED
 
@@ -78,8 +78,8 @@ class EBBS(eons.Executor):
 	#Override of eons.Executor method. See that class for details
 	def Function(this):
 		super().Function()
-				
-		return this.Build(this.parsedArgs.builder, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
+		build = this.Fetch('build', default="default")
+		return this.Build(build, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
 
 	#Run a build script.
 	#RETURNS whether or not the build was successful.

@@ -290,7 +290,7 @@ class Builder(eons.StandardFunctor):
 		if (this.projectName):
 			runMessage += f" for \"{this.projectName}\""
 		if (this.projectType != this.projectName):
-			runMessage += ", a \"{this.projectType}\""
+			runMessage += f", a \"{this.projectType}\""
 		if (this.buildPath):
 			runMessage += f"in {this.buildPath}"
 		logging.info(runMessage)
