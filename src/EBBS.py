@@ -78,7 +78,10 @@ class EBBS(eons.Executor):
 	#Override of eons.Executor method. See that class for details
 	def Function(this):
 		super().Function()
-		build = this.Fetch('build', default="default")
+		if (this.parsedArgs.builder):
+			build = this.parsedArgs.builder
+		else:
+			build = this.Fetch('build', default="default")
 		return this.Build(build, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
 
 	#Run a build script.
