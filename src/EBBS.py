@@ -51,28 +51,29 @@ class EBBS(eons.Executor):
 		super().ParseArgs()
 
 		this.parsedArgs.path = os.getcwd() #used to be arg; now we hard code
-		this.rootPath = str(Path(this.parsedArgs.path).resolve())
 
 		this.events = set()
 		if (this.parsedArgs.events is not None):
 			[[this.events.add(str(e)) for e in l] for l in this.parsedArgs.events]
 
-			if (not this.parsedArgs.builder):
-				logging.debug("No build specified. Assuming build pipeline is written in config.")
-
 
 	def WarmUpFlow(this, flow):
-		flow.WarmUp(executor=this, path=this.parsedArgs.path, build_in=this.defaultBuildIn, events=this.events, **this.extraArgs)
+		flow.WarmUp(executor=this, path=this.rootPath, build_in=this.defaultBuildIn, events=this.events, **this.extraArgs)
 
 
 	#Override of eons.Executor method. See that class for details
 	def InitData(this):
 		if ('build_in' in this.extraArgs):
-			this.defaultBuildIn = this.extraArgs.pop('build_in')
+			this.Set('defaultBuildIn', this.extraArgs.pop('build_in'), False)
 		else:
-			this.defaultBuildIn = this.Fetch('build_in', default="build")
+			this.Set('defaultBuildIn', this.Fetch('build_in', default="build"), False)
 	
-		this.rootPath = Path(this.FetchWithout(['environment'], 'path', default='../')).resolve() #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
+		this.Set(
+			'rootPath',
+			str(Path(this.FetchWithout(['environment'], 'path', default='../')).resolve()), #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
+			False
+		)
+		this.Set('buildPath', str(Path('./').joinpath(this.defaultBuildIn).resolve()), False)
 
 
 	#Override of eons.Executor method. See that class for details
@@ -82,7 +83,17 @@ class EBBS(eons.Executor):
 			build = this.parsedArgs.builder
 		else:
 			build = this.Fetch('build', default="default")
-		return this.Build(build, this.parsedArgs.path, this.defaultBuildIn, this.events, **this.extraArgs)
+		
+		buildIn = os.path.relpath(this.buildPath, this.rootPath)
+
+		args = this.extraArgs.copy()
+		args['build'] = build
+		args['path'] = this.rootPath
+		args['build_in'] = buildIn
+		args['events'] = this.events
+
+		return this.Build(**args)
+
 
 	#Run a build script.
 	#RETURNS whether or not the build was successful.

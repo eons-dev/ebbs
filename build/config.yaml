@@ -1,6 +1,7 @@
 name: ebbs
 type: exe
 clear_build_path: true
+# build_in: build/tmp
 build_in: tmp
 next:
 - run_when_none:

@@ -29,10 +29,10 @@ next:
 				- build: test
 					build_in: test
 					copy:
-					- "/src": "test/integration/build/ebbs/src/"
-					- "/inc": "test/integration/build/ebbs/inc/"
-					- "/README.md": "test/integration/build/ebbs/README.md"
-					- "/LICENSE": "test/integration/build/ebbs/LICENSE"
+					- "/src": "test/integration/build/src/"
+					- "/inc": "test/integration/build/inc/"
+					- "/README.md": "test/integration/build/README.md"
+					- "/LICENSE": "test/integration/build/LICENSE"
 					config:
 						test_path: "integration"
 						test_fixture: integration.yaml
