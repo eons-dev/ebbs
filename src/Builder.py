@@ -7,6 +7,9 @@ import eons
 from .Exceptions import *
 
 class Builder(eons.StandardFunctor):
+
+	primaryFunctionName = "Build"
+
 	def __init__(this, name=eons.INVALID_NAME()):
 		super().__init__(name)
 
