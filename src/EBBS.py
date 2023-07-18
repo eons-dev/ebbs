@@ -36,7 +36,6 @@ class EBBS(eons.Executor):
 	#Override of eons.Executor method. See that class for details
 	def RegisterAllClasses(this):
 		super().RegisterAllClasses()
-		# this.RegisterAllClassesInDirectory(os.path.join(os.path.dirname(os.path.abspath(__file__)), "build"))
 
 
 	#Override of eons.Executor method. See that class for details
@@ -82,7 +81,14 @@ class EBBS(eons.Executor):
 		if (this.parsedArgs.builder):
 			build = this.parsedArgs.builder
 		else:
-			build = this.Fetch('build', default="default")
+			build = this.FetchWithout(['environment'], 'build', default="default")
+
+		pathToBuilder = build.split('/')
+		build = pathToBuilder[-1]
+		this.RegisterAllClassesInDirectory(
+			Path('./').joinpath('/'.join(pathToBuilder[:-1])),
+			recurse = False
+		)
 		
 		buildIn = os.path.relpath(this.buildPath, this.rootPath)
 
@@ -91,6 +97,8 @@ class EBBS(eons.Executor):
 		args['path'] = this.rootPath
 		args['build_in'] = buildIn
 		args['events'] = this.events
+
+		logging.info(f"{this.name} building{args}")
 
 		return this.Build(**args)
 
