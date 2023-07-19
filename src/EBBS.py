@@ -100,7 +100,14 @@ class EBBS(eons.Executor):
 
 		logging.info(f"{this.name} building{args}")
 
-		return this.Build(**args)
+		this.result.data.returned = this.Build(**args)
+		
+		# Convert the process result to a unix return code.
+		if (isinstance(this.result.data.returned, eons.Functor)):
+			return this.result.data.returned.result.code
+		
+		# Meh. We got here. It's probably fine.
+		return 0
 
 
 	#Run a build script.
