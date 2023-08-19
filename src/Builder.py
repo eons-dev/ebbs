@@ -153,7 +153,7 @@ class Builder(eons.StandardFunctor):
 
 		# This is messy because we can't query this.name or executor.name and need to get "name" from a config or arg val to set projectName.
 		for key, mem in this.configNameOverrides.items():
-			this.Set(key, this.FetchWithout(['this', 'executor', 'precursor', 'globals'], key, default=this.executor.FetchWithout(['this', 'globals'], key, default=eval(f"default_{key}"), start=False)[0]))
+			this.Set(mem, this.FetchWithout(['this', 'executor', 'precursor', 'globals'], key, default=this.executor.FetchWithout(['this', 'globals'], key, default=eval(f"default_{key}"), start=False)[0]))
 			# if (getattr(this, mem) is None):
 			# 	logging.warning(f"Not configured: {key}")
 
