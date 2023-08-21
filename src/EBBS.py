@@ -27,11 +27,10 @@ class EBBS(eons.Executor):
 	def Configure(this):
 		super().Configure()
 
-		this.defaultBuildIn = "build"
-		this.defaultConfigFile = "config"
-		this.defaultPackageType = "build"
-		this.defaultPrefix = "build" # DEPRECATED
-
+		this.default.build = eons.util.DotDict()
+		this.default.build.directory = "build"
+		this.default.config.files.append("build")
+		this.default.package.type = "build"
 
 	#Override of eons.Executor method. See that class for details
 	def RegisterAllClasses(this):
@@ -41,8 +40,8 @@ class EBBS(eons.Executor):
 	#Override of eons.Executor method. See that class for details
 	def AddArgs(this):
 		super().AddArgs()
-		this.argparser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'script to use for building', dest = 'builder')
-		this.argparser.add_argument('-e','--event', type = str, action='append', nargs='*', metavar = 'release', help = 'what is going on that triggered this build?', dest = 'events')
+		this.arg.parser.add_argument('-b','--build', type = str, metavar = 'cpp', help = 'script to use for building', dest = 'builder')
+		this.arg.parser.add_argument('-e','--event', type = str, action='append', nargs='*', metavar = 'release', help = 'what is going on that triggered this build?', dest = 'events')
 
 
 	#Override of eons.Executor method. See that class for details
@@ -57,22 +56,22 @@ class EBBS(eons.Executor):
 
 
 	def WarmUpFlow(this, flow):
-		flow.WarmUp(executor=this, path=this.rootPath, build_in=this.defaultBuildIn, events=this.events, **this.extraArgs)
+		flow.WarmUp(executor=this, path=this.rootPath, build_in=this.default.build.directory, events=this.events, **this.extraArgs)
 
 
 	#Override of eons.Executor method. See that class for details
 	def InitData(this):
 		if ('build_in' in this.extraArgs):
-			this.Set('defaultBuildIn', this.extraArgs.pop('build_in'), False)
+			this.Set('default.build.directory', this.extraArgs.pop('build_in'), False)
 		else:
-			this.Set('defaultBuildIn', this.Fetch('build_in', default="build"), False)
+			this.Set('default.build.directory', this.Fetch('build_in', default="build"), False)
 	
 		this.Set(
 			'rootPath',
 			str(Path(this.FetchWithout(['environment'], 'path', default='../')).resolve()), #ebbs is usually called from a build folder in a project, i.eons. .../build/../ = /
 			False
 		)
-		this.Set('buildPath', str(Path('./').joinpath(this.defaultBuildIn).resolve()), False)
+		this.Set('buildPath', str(Path('./').joinpath(this.default.build.directory).resolve()), False)
 
 
 	#Override of eons.Executor method. See that class for details
@@ -97,6 +96,7 @@ class EBBS(eons.Executor):
 		args['path'] = this.rootPath
 		args['build_in'] = buildIn
 		args['events'] = this.events
+		args['next'] = this.Fetch('next', default=[])
 
 		logging.info(f"{this.name} building{args}")
 

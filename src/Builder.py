@@ -105,12 +105,13 @@ class Builder(eons.StandardFunctor):
 	def PopulateLocalConfig(this, configName=None):
 		if (not configName):
 			if (this.executor):
-				for ext in this.executor.configFileExtensions:
-					if (Path(f"build.{ext}").exists()):
-						configName = f"build.{ext}"
+				for ext in this.executor.default.config.extensions:
+					possibleConfig = f"build.{type(this).__name__}.{ext}"
+					if (Path(possibleConfig).exists()):
+						configName = possibleConfig
 						break
 			else:
-				configName = "build.json"
+				configName = f"build.{type(this).__name__}.json"
 		
 		if (not configName or not Path(configName).exists()):
 			if (this.executor and not this.precursor):
@@ -225,7 +226,8 @@ class Builder(eons.StandardFunctor):
 					this.Copy(src, dst, root=this.executor.rootPath)
 
 		if ("config" in nextBuilder and nextBuilder["config"]):
-			nextConfigFile = os.path.join(nextPath, "build.json")
+			nextConfigFileName = f"build.{nextBuilder['build']}.json"
+			nextConfigFile = os.path.join(nextPath, nextConfigFileName)
 			logging.debug(f"writing: {nextConfigFile}")
 			nextConfig = open(nextConfigFile, "w")
 			for key, var in this.configNameOverrides.items():
