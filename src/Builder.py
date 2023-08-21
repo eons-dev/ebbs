@@ -103,17 +103,28 @@ class Builder(eons.StandardFunctor):
 
 	# Populate the configuration details for *this.
 	def PopulateLocalConfig(this, configName=None):
+		localConfigFile = None
 		if (not configName):
 			if (this.executor):
 				for ext in this.executor.default.config.extensions:
-					possibleConfig = f"build.{type(this).__name__}.{ext}"
-					if (Path(possibleConfig).exists()):
-						configName = possibleConfig
+					possibleConfigName = f"build.{type(this).__name__}.{ext}"
+					possibleConfig = Path(this.buildPath).joinpath(possibleConfigName)
+					logging.debug(f"Looking for configuration file: {possibleConfig}")
+					if (possibleConfig.exists()):
+						configName = possibleConfigName
+						localConfigFile = possibleConfig
+						logging.debug(f"Found configuration file: {configName}")
 						break
 			else:
 				configName = f"build.{type(this).__name__}.json"
+				
+		if (not localConfigFile):
+			try:
+				localConfigFile = Path(this.buildPath).joinpath(configName)
+			except:
+				localConfigFile = None
 		
-		if (not configName or not Path(configName).exists()):
+		if (not configName or not localConfigFile or not localConfigFile.exists()):
 			if (this.executor and not this.precursor):
 				this.config = this.executor.config
 				logging.debug(f"Using executor config: {this.config}")
@@ -122,15 +133,6 @@ class Builder(eons.StandardFunctor):
 				logging.info(f"Could not find a configuration file for {this.name}")
 				this.config = {} # safer than n
 				return
-
-		this.config = None
-		localConfigFile = os.path.join(this.rootPath, configName)
-		logging.debug(f"Looking for local configuration: {localConfigFile}")
-		if (os.path.isfile(localConfigFile)):
-			configFile = open(localConfigFile, "r")
-			this.config = yaml.safe_load(configFile.read().replace('\t', '  '))
-			configFile.close()
-			logging.debug(f"Got local config contents: {this.config}")
 
 
 	# Calls PopulatePaths and PopulateVars after getting information from local directory
@@ -207,15 +209,24 @@ class Builder(eons.StandardFunctor):
 			return None
 
 		logging.debug(f"<---- Preparing for next builder: {nextBuilder['build']} ---->")
-		# logging.debug(f"Preparing for next builder: {nextBuilder}")
 
-		nextPath = "."
+		nextBuildPath = "build"
+		if ('build_in' in nextBuilder):
+			nextBuildPath = nextBuilder['build_in']
+
+		nextRootPath = "."
 		if ("path" in nextBuilder):
-			nextPath = nextBuilder["path"]
-		nextPath = os.path.join(this.buildPath, nextPath)
-		# mkpath(nextPath) <- just broken.
-		Path(nextPath).mkdir(parents=True, exist_ok=True)
-		logging.debug(f"Next build path is: {nextPath}")
+			nextRootPath = nextBuilder["path"]
+		if (nextRootPath.startswith("/")):
+			nextRootPath = Path(this.executor.rootPath).joinpath(nextRootPath[1:])
+		else:
+			nextRootPath = Path(this.buildPath).joinpath(nextRootPath)
+
+		nextBuildPath = nextRootPath.joinpath(nextBuildPath)
+
+		# mkpath(nextRootPath) <- just broken.
+		nextBuildPath.mkdir(parents=True, exist_ok=True)
+		logging.debug(f"Next build path is: {nextBuildPath}")
 
 		if ("copy" in nextBuilder):
 			# dict() is necessary to strip off any wrappers, like DotDict, etc.
@@ -223,11 +234,11 @@ class Builder(eons.StandardFunctor):
 			for cpy in dict(nextBuilder)["copy"]:
 				# logging.debug(f"copying: {cpy}")
 				for src, dst in cpy.items():
-					this.Copy(src, dst, root=this.executor.rootPath)
+					this.Copy(src, Path(nextRootPath).joinpath(dst), root=this.executor.rootPath)
 
 		if ("config" in nextBuilder and nextBuilder["config"]):
 			nextConfigFileName = f"build.{nextBuilder['build']}.json"
-			nextConfigFile = os.path.join(nextPath, nextConfigFileName)
+			nextConfigFile = nextBuildPath.joinpath(nextConfigFileName)
 			logging.debug(f"writing: {nextConfigFile}")
 			nextConfig = open(nextConfigFile, "w")
 			for key, var in this.configNameOverrides.items():
@@ -239,7 +250,7 @@ class Builder(eons.StandardFunctor):
 			nextConfig.close()
 
 		logging.debug(f">---- Completed preparation for: {nextBuilder['build']} ----<")
-		return nextPath
+		return nextRootPath
 
 
 	# Runs the next Builder.
