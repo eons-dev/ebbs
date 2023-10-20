@@ -133,6 +133,20 @@ class Builder(eons.StandardFunctor):
 				logging.info(f"Could not find a configuration file for {this.name}")
 				this.config = {} # safer than n
 				return
+			
+		configType = str(localConfigFile).split(".")[-1]
+		localConfigFile = open(localConfigFile, "r")
+
+		if (this.executor):
+			this.config = this.executor.ParseConfigFile(this.executor, configType, localConfigFile)
+			return
+			
+		if (configType in ['json', 'yml', 'yaml']):
+			# Yaml doesn't allow tabs. We do. Convert.
+			this.config = yaml.safe_load(localConfigFile.read().replace('\t', '  '))
+			return
+		
+		raise OtherBuildError(f"Config file type {configType} is not supported. Consider supplying an executor to {this.name}.")
 
 
 	# Calls PopulatePaths and PopulateVars after getting information from local directory
